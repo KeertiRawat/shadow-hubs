@@ -1,0 +1,233 @@
+country_iso3,country_name,iso2,code,is_group,ofac_entities,ofac_entity_country_links
+ABW,Aruba,AW,533,False,1,1
+AFG,Afghanistan,AF,4,False,82,82
+AGO,Angola,AO,24,False,11,11
+AIA,Anguilla,AI,660,False,0,0
+ALB,Albania,AL,8,False,8,8
+AND,Andorra,AD,20,False,0,0
+ARE,United Arab Emirates,AE,784,False,668,668
+ARG,Argentina,AR,32,False,19,19
+ARM,Armenia,AM,51,False,6,6
+ASM,American Samoa,AS,16,False,0,0
+ATA,Antarctica,AQ,10,False,0,0
+ATF,Fr. South Antarctic Terr.,TF,260,False,0,0
+ATG,Antigua and Barbuda,AG,28,False,2,2
+AUS,Australia,AU,36,False,6,6
+AUT,Austria,AT,40,False,15,15
+AZE,Azerbaijan,AZ,31,False,8,8
+BDI,Burundi,BI,108,False,0,0
+BEL,Belgium,BE,56,False,38,38
+BEN,Benin,BJ,204,False,10,10
+BES,Bonaire,BQ,535,False,0,0
+BFA,Burkina Faso,BF,854,False,4,4
+BGD,Bangladesh,BD,50,False,15,15
+BGR,Bulgaria,BG,100,False,92,92
+BHR,Bahrain,BH,48,False,5,5
+BHS,Bahamas,BS,44,False,2,2
+BIH,Bosnia Herzegovina,BA,70,False,26,26
+BLM,Saint Barthélemy,BL,652,False,0,0
+BLR,Belarus,BY,112,False,260,260
+BLZ,Belize,BZ,84,False,6,6
+BMU,Bermuda,BM,60,False,2,2
+BOL,Bolivia (Plurinational State of),BO,68,False,4,4
+BRA,Brazil,BR,76,False,22,22
+BRB,Barbados,BB,52,False,3,3
+BRN,Brunei Darussalam,BN,96,False,0,0
+BTN,Bhutan,BT,64,False,0,0
+BWA,Botswana,BW,72,False,0,0
+CAF,Central African Rep.,CF,140,False,27,27
+CAN,Canada,CA,124,False,39,39
+CCK,Cocos Isds,CC,166,False,0,0
+CHE,Switzerland,CH,757,False,81,81
+CHL,Chile,CL,152,False,8,8
+CHN,China,CN,156,False,1072,1072
+CIV,Côte d'Ivoire,CI,384,False,7,7
+CMR,Cameroon,CM,120,False,0,0
+COD,Dem. Rep. of the Congo,CD,180,False,84,84
+COG,Congo,CG,178,False,3,3
+COK,Cook Isds,CK,184,False,0,0
+COL,Colombia,CO,170,False,383,383
+COM,Comoros,KM,174,False,1,1
+CPV,Cabo Verde,CV,132,False,0,0
+CRI,Costa Rica,CR,188,False,19,19
+CUB,Cuba,CU,192,False,35,35
+CUW,Curaçao,CW,531,False,0,0
+CXR,Christmas Isds,CX,162,False,0,0
+CYM,Cayman Isds,KY,136,False,14,14
+CYP,Cyprus,CY,196,False,128,128
+CZE,Czechia,CZ,203,False,10,10
+DEU,Germany,DE,276,False,129,129
+DJI,Djibouti,DJ,262,False,4,4
+DMA,Dominica,DM,212,False,1,1
+DNK,Denmark,DK,208,False,3,3
+DOM,Dominican Rep.,DO,214,False,25,25
+DZA,Algeria,DZ,12,False,14,14
+ECU,Ecuador,EC,218,False,12,12
+EGY,Egypt,EG,818,False,27,27
+ERI,Eritrea,ER,232,False,10,10
+ESH,Western Sahara,EH,732,False,0,0
+ESP,Spain,ES,724,False,48,48
+EST,Estonia,EE,233,False,16,16
+ETH,Ethiopia,ET,231,False,5,5
+FIN,Finland,FI,246,False,20,20
+FJI,Fiji,FJ,242,False,0,0
+FLK,Falkland Isds (Malvinas),FK,238,False,0,0
+FRA,France,FR,251,False,42,42
+FRO,Faroe Isds,FO,234,False,0,0
+FSM,FS Micronesia,FM,583,False,0,0
+GAB,Gabon,GA,266,False,0,0
+GBR,United Kingdom,GB,826,False,190,190
+GEO,Georgia,GE,268,False,15,15
+GHA,Ghana,GH,288,False,3,3
+GIB,Gibraltar,GI,292,False,6,6
+GIN,Guinea,GN,324,False,2,2
+GMB,Gambia,GM,270,False,19,19
+GNB,Guinea-Bissau,GW,624,False,0,0
+GNQ,Equatorial Guinea,GQ,226,False,2,2
+GRC,Greece,GR,300,False,19,19
+GRD,Grenada,GD,308,False,0,0
+GRL,Greenland,GL,304,False,0,0
+GTM,Guatemala,GT,320,False,62,62
+GUM,Guam,GU,316,False,0,0
+GUY,Guyana,GY,328,False,12,12
+HKG,"China, Hong Kong SAR",HK,344,False,71,71
+HMD,Heard Island and McDonald Islands,HM,334,False,0,0
+HND,Honduras,HN,340,False,31,31
+HRV,Croatia,HR,191,False,5,5
+HTI,Haiti,HT,332,False,19,19
+HUN,Hungary,HU,348,False,11,11
+IDN,Indonesia,ID,360,False,23,23
+IND,India,IN,699,False,140,140
+IOT,Br. Indian Ocean Terr.,IO,86,False,0,0
+IRL,Ireland,IE,372,False,8,8
+IRN,Iran,IR,364,False,1519,1519
+IRQ,Iraq,IQ,368,False,171,171
+ISL,Iceland,IS,352,False,1,1
+ISR,Israel,IL,376,False,18,18
+ITA,Italy,IT,380,False,78,78
+JAM,Jamaica,JM,388,False,6,6
+JOR,Jordan,JO,400,False,31,31
+JPN,Japan,JP,392,False,23,23
+KAZ,Kazakhstan,KZ,398,False,13,13
+KEN,Kenya,KE,404,False,19,19
+KGZ,Kyrgyzstan,KG,417,False,25,25
+KHM,Cambodia,KH,116,False,122,122
+KIR,Kiribati,KI,296,False,0,0
+KNA,Saint Kitts and Nevis,KN,659,False,5,5
+KOR,Rep. of Korea,KR,410,False,5,5
+KWT,Kuwait,KW,414,False,17,17
+LAO,Lao People's Dem. Rep.,LA,418,False,6,6
+LBN,Lebanon,LB,422,False,331,331
+LBR,Liberia,LR,430,False,48,48
+LBY,Libya,LY,434,False,28,28
+LCA,Saint Lucia,LC,662,False,0,0
+LKA,Sri Lanka,LK,144,False,4,4
+LSO,Lesotho,LS,426,False,0,0
+LTU,Lithuania,LT,440,False,7,7
+LUX,Luxembourg,LU,442,False,8,8
+LVA,Latvia,LV,428,False,14,14
+MAC,"China, Macao SAR",MO,446,False,2,2
+MAR,Morocco,MA,504,False,2,2
+MDA,Rep. of Moldova,MD,498,False,13,13
+MDG,Madagascar,MG,450,False,0,0
+MDV,Maldives,MV,462,False,50,50
+MEX,Mexico,MX,484,False,1088,1088
+MHL,Marshall Isds,MH,584,False,122,122
+MKD,North Macedonia,MK,807,False,12,12
+MLI,Mali,ML,466,False,26,26
+MLT,Malta,MT,470,False,57,57
+MMR,Myanmar,MM,104,False,191,191
+MNE,Montenegro,ME,499,False,7,7
+MNG,Mongolia,MN,496,False,3,3
+MNP,N. Mariana Isds,MP,580,False,0,0
+MOZ,Mozambique,MZ,508,False,8,8
+MRT,Mauritania,MR,478,False,2,2
+MSR,Montserrat,MS,500,False,0,0
+MUS,Mauritius,MU,480,False,1,1
+MWI,Malawi,MW,454,False,0,0
+MYS,Malaysia,MY,458,False,42,42
+NAM,Namibia,,516,False,3,3
+NCL,New Caledonia,NC,540,False,0,0
+NER,Niger,NE,562,False,2,2
+NFK,Norfolk Isds,NF,574,False,0,0
+NGA,Nigeria,NG,566,False,22,22
+NIC,Nicaragua,NI,558,False,67,67
+NIU,Niue,NU,570,False,0,0
+NLD,Netherlands,NL,528,False,58,58
+NOR,Norway,NO,579,False,5,5
+NPL,Nepal,NP,524,False,0,0
+NRU,Nauru,NR,520,False,0,0
+NZL,New Zealand,NZ,554,False,5,5
+OMN,Oman,OM,512,False,30,30
+PAK,Pakistan,PK,586,False,169,169
+PAN,Panama,PA,591,False,144,144
+PCN,Pitcairn,PN,612,False,0,0
+PER,Peru,PE,604,False,36,36
+PHL,Philippines,PH,608,False,18,18
+PLW,Palau,PW,585,False,9,9
+PNG,Papua New Guinea,PG,598,False,0,0
+POL,Poland,PL,616,False,10,10
+PRK,Dem. People's Rep. of Korea,KP,408,False,232,232
+PRT,Portugal,PT,620,False,2,2
+PRY,Paraguay,PY,600,False,15,15
+PSE,State of Palestine,PS,275,False,67,67
+PYF,French Polynesia,PF,258,False,0,0
+QAT,Qatar,QA,634,False,15,15
+ROU,Romania,RO,642,False,9,9
+RUS,Russian Federation,RU,643,False,5237,5237
+RWA,Rwanda,RW,646,False,6,6
+SAU,Saudi Arabia,SA,682,False,23,23
+SDN,Sudan,SD,729,False,42,42
+SEN,Senegal,SN,686,False,1,1
+SGP,Singapore,SG,702,False,110,110
+SGS,South Georgia and the South Sandwich Islands,GS,239,False,0,0
+SHN,Saint Helena,SH,654,False,0,0
+SLB,Solomon Isds,SB,90,False,0,0
+SLE,Sierra Leone,SL,694,False,8,8
+SLV,El Salvador,SV,222,False,11,11
+SMR,San Marino,SM,674,False,1,1
+SOM,Somalia,SO,706,False,68,68
+SPM,Saint Pierre and Miquelon,PM,666,False,0,0
+SRB,Serbia,RS,688,False,49,49
+SSD,South Sudan,SS,728,False,33,33
+STP,Sao Tome and Principe,ST,678,False,0,0
+SUR,Suriname,SR,740,False,6,6
+SVK,Slovakia,SK,703,False,16,16
+SVN,Slovenia,SI,705,False,9,9
+SWE,Sweden,SE,752,False,13,13
+SWZ,Eswatini,SZ,748,False,0,0
+SXM,Saint Maarten,SX,534,False,0,0
+SYC,Seychelles,SC,690,False,43,43
+SYR,Syria,SY,760,False,305,305
+TCA,Turks and Caicos Isds,TC,796,False,0,0
+TCD,Chad,TD,148,False,0,0
+TGO,Togo,TG,768,False,0,0
+THA,Thailand,TH,764,False,71,71
+TJK,Tajikistan,TJ,762,False,5,5
+TKL,Tokelau,TK,772,False,0,0
+TKM,Turkmenistan,TM,795,False,5,5
+TLS,Timor-Leste,TL,626,False,0,0
+TON,Tonga,TO,776,False,0,0
+TTO,Trinidad and Tobago,TT,780,False,1,1
+TUN,Tunisia,TN,788,False,8,8
+TUR,Türkiye,TR,792,False,350,350
+TUV,Tuvalu,TV,798,False,0,0
+TZA,United Rep. of Tanzania,TZ,834,False,3,3
+UGA,Uganda,UG,800,False,18,18
+UKR,Ukraine,UA,804,False,242,242
+UMI,United States Minor Outlying Islands,UM,581,False,0,0
+URY,Uruguay,UY,858,False,3,3
+USA,USA,US,842,False,75,75
+UZB,Uzbekistan,UZ,860,False,25,25
+VAT,Holy See (Vatican City State),VA,336,False,0,0
+VCT,Saint Vincent and the Grenadines,VC,670,False,4,4
+VEN,Venezuela,VE,862,False,254,254
+VGB,Br. Virgin Isds,VG,92,False,46,46
+VNM,Viet Nam,VN,704,False,17,17
+VUT,Vanuatu,VU,548,False,2,2
+WLF,Wallis and Futuna Isds,WF,876,False,0,0
+WSM,Samoa,WS,882,False,1,1
+YEM,Yemen,YE,887,False,138,138
+ZAF,South Africa,ZA,710,False,48,48
+ZMB,Zambia,ZM,894,False,5,5
+ZWE,Zimbabwe,ZW,716,False,20,20

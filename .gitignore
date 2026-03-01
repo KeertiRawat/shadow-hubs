@@ -1,0 +1,17 @@
+# Credentials & secrets
+Neo4j-*.txt
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
