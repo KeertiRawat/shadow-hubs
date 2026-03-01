@@ -138,13 +138,7 @@ jupyter notebook notebooks/SMA-Final\ Project.ipynb
 
 ## 👥 Team
 
-| Name | Role |
-|------|------|
-| Keerti Rawat | Team Member |
-| Muskan Khepar | Team Member |
-| Nikhil Kumar | Team Member |
-| Stiles Clements | Team Member |
-| Zan Merrill | Graph Architect |
+Keerti Rawat · Muskan Khepar · Nikhil Kumar · Stiles Clements · Zan Merrill
 
 **Course:** Social Media & Network Analytics — Spring 2026
 
