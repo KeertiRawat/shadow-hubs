@@ -223,10 +223,9 @@
 
         function updateChart(year) {
             document.getElementById('tableYear').textContent = year;
-            const yearData = allData.filter(d => d.year === year && d.shadow_resid > -0.1);
-            const positive = yearData.filter(d => d.shadow_resid > 0);
-            const top10 = positive
-                .filter(d => d.ofac_entities > 5)
+            const yearData = allData.filter(d => d.year === year);
+            const top10 = yearData
+                .filter(d => d.shadow_resid > 0 && d.ofac_entities > 5)
                 .sort((a, b) => b.shadow_resid - a.shadow_resid)
                 .slice(0, 10);
 
@@ -254,7 +253,7 @@
             ];
 
             const labelMap = {};
-            positive.forEach(d => {
+            yearData.forEach(d => {
                 const p = getPattern(d.clustering);
                 const point = {
                     x: d.shadow_resid,
@@ -347,7 +346,9 @@
                                 font: { size: 13 }
                             },
                             ticks: { color: '#a0b0cc' },
-                            grid: { color: 'rgba(100,150,255,0.1)' }
+                            grid: { color: 'rgba(100,150,255,0.1)' },
+                            suggestedMin: -0.15,
+                            suggestedMax: 0.25
                         },
                         y: {
                             type: 'logarithmic',

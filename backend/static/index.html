@@ -374,10 +374,16 @@
         }
 
         /* CHAT PANEL STYLES */
-        .chat-toggle-btn {
+        .bottom-buttons {
             position: fixed;
             bottom: 30px;
             right: 30px;
+            display: flex;
+            gap: 12px;
+            z-index: 200;
+        }
+
+        .bottom-btn {
             height: 48px;
             padding: 0 20px;
             border-radius: 24px;
@@ -387,7 +393,6 @@
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            z-index: 200;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -398,10 +403,43 @@
             font-family: inherit;
         }
 
-        .chat-toggle-btn:hover {
+        .bottom-btn:hover {
             transform: scale(1.05);
             border-color: rgba(100, 180, 255, 0.8);
             background: rgba(30, 40, 70, 0.95);
+        }
+
+        .lb-mode-toggle {
+            display: flex;
+            gap: 0;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(100, 150, 255, 0.3);
+        }
+
+        .lb-mode-btn {
+            flex: 1;
+            padding: 5px 8px;
+            background: rgba(15, 25, 50, 0.6);
+            border: none;
+            color: #90caf9;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .lb-mode-btn.active {
+            background: rgba(100, 150, 255, 0.25);
+            color: #64b5f6;
+        }
+
+        .lb-mode-btn:hover:not(.active) {
+            background: rgba(100, 150, 255, 0.1);
         }
 
         .chat-panel {
@@ -734,13 +772,17 @@
 
     <div class="leaderboard">
         <h3>TOP SHADOW HUBS (<span id="lbYear">2024</span>)</h3>
+        <div class="lb-mode-toggle">
+            <button class="lb-mode-btn active" id="lbModeCluster" onclick="setLeaderboardMode('cluster')">Clustered</button>
+            <button class="lb-mode-btn" id="lbModeRaw" onclick="setLeaderboardMode('raw')">Raw</button>
+        </div>
         <table class="leaderboard-table">
             <thead>
                 <tr>
                     <th>Rank</th>
                     <th>Country</th>
                     <th>Residual</th>
-                    <th>OFAC</th>
+                    <th id="lbFourthHeader">Cluster</th>
                 </tr>
             </thead>
             <tbody id="lbBody">
@@ -748,8 +790,11 @@
         </table>
     </div>
 
-    <!-- Chat Panel -->
-    <button class="chat-toggle-btn" id="chatToggleBtn" title="Ask AI about shadow hubs">Ask AI</button>
+    <!-- Bottom Buttons -->
+    <div class="bottom-buttons">
+        <a href="/static/clustering.html" class="bottom-btn" style="text-decoration:none;" title="View clustering analysis">Clustering</a>
+        <button class="bottom-btn" id="chatToggleBtn" title="Ask AI about shadow hubs">Ask AI</button>
+    </div>
 
     <div class="chat-panel" id="chatPanel">
         <div class="chat-header">
@@ -781,6 +826,8 @@
         let edgesByYear = {};
         let currentYear = 2024;
         let sessionId = '';
+        let clusteringData = [];
+        let leaderboardMode = 'cluster';
 
         // Initialize session
         function initSession() {
@@ -1036,11 +1083,13 @@
 
             try {
                 // Load data
-                const [countriesResp, shadowResp, edgesResp] = await Promise.all([
+                const [countriesResp, shadowResp, edgesResp, clusterResp] = await Promise.all([
                     fetch('data/countries.json').then(r => r.json()),
                     fetch('data/shadow_hubs.json').then(r => r.json()),
-                    fetch('data/edges.json').then(r => r.json())
+                    fetch('data/edges.json').then(r => r.json()),
+                    fetch('data/clustering_data.json').then(r => r.json())
                 ]);
+                clusteringData = clusterResp;
 
                 // Process countries
                 countriesResp.forEach(c => {
@@ -1191,65 +1240,108 @@
             }
         }
 
+        function setLeaderboardMode(mode) {
+            leaderboardMode = mode;
+            document.getElementById('lbModeCluster').classList.toggle('active', mode === 'cluster');
+            document.getElementById('lbModeRaw').classList.toggle('active', mode === 'raw');
+            document.getElementById('lbFourthHeader').textContent = mode === 'cluster' ? 'Cluster' : 'OFAC';
+            updateLeaderboard(currentYear);
+        }
+
+        function getClusterPattern(clustering) {
+            if (clustering < 0.20) return { label: 'Broker', css: 'lb-ofac-low' };
+            if (clustering > 0.40) return { label: 'Syndicate', css: 'lb-ofac-high' };
+            return { label: 'Mixed', css: 'lb-ofac-med' };
+        }
+
         function updateLeaderboard(year) {
             const yearStr = year.toString();
             document.getElementById('lbYear').textContent = yearStr;
 
-            // Collect all shadow hub entries for this year
-            const hubs = [];
-            for (const key in shadowLookup) {
-                if (key.startsWith(yearStr + '_')) {
-                    const iso3 = key.split('_')[1];
-                    const sh = shadowLookup[key];
-                    const country = countriesData[iso3];
-                    if (country && sh.shadow_rank && sh.shadow_rank <= 999) {
-                        hubs.push({
-                            iso3: iso3,
-                            name: country.name || iso3,
-                            rank: sh.shadow_rank,
-                            residual: sh.shadow_resid,
-                            ofac: country.ofac_entities || 0,
-                            lat: country.lat,
-                            lon: country.lon
-                        });
+            if (leaderboardMode === 'cluster') {
+                // Clustered analysis mode - use clustering data, filter by OFAC > 5
+                const yearCluster = clusteringData.filter(d => d.year === year);
+                const top10 = yearCluster
+                    .filter(d => d.shadow_resid > 0 && d.ofac_entities > 5)
+                    .sort((a, b) => b.shadow_resid - a.shadow_resid)
+                    .slice(0, 10);
+
+                const tbody = document.getElementById('lbBody');
+                tbody.innerHTML = '';
+
+                top10.forEach((h, i) => {
+                    const tr = document.createElement('tr');
+                    const p = getClusterPattern(h.clustering);
+                    const country = countriesData[h.iso3];
+
+                    tr.addEventListener('click', () => {
+                        const pt = globe.pointsData().find(pp => pp.iso3 === h.iso3);
+                        if (pt) {
+                            handlePointClick(pt);
+                            globe.pointOfView({ lat: country ? country.lat : 0, lng: country ? country.lon : 0, altitude: 2.0 }, 1000);
+                        }
+                    });
+
+                    tr.innerHTML =
+                        '<td class="lb-rank">' + (i + 1) + '</td>' +
+                        '<td class="lb-country">' + (h.name || h.iso3) + '</td>' +
+                        '<td class="lb-residual">' + h.shadow_resid.toFixed(3) + '</td>' +
+                        '<td class="lb-ofac"><span class="lb-ofac-badge ' + p.css + '">' + p.label + '</span></td>';
+
+                    tbody.appendChild(tr);
+                });
+            } else {
+                // Raw mode - original ranking
+                const hubs = [];
+                for (const key in shadowLookup) {
+                    if (key.startsWith(yearStr + '_')) {
+                        const iso3 = key.split('_')[1];
+                        const sh = shadowLookup[key];
+                        const country = countriesData[iso3];
+                        if (country && sh.shadow_rank && sh.shadow_rank <= 999) {
+                            hubs.push({
+                                iso3: iso3,
+                                name: country.name || iso3,
+                                rank: sh.shadow_rank,
+                                residual: sh.shadow_resid,
+                                ofac: country.ofac_entities || 0,
+                                lat: country.lat,
+                                lon: country.lon
+                            });
+                        }
                     }
                 }
-            }
 
-            // Sort by rank, take top 10
-            hubs.sort((a, b) => a.rank - b.rank);
-            const top10 = hubs.slice(0, 10);
+                hubs.sort((a, b) => a.rank - b.rank);
+                const top10 = hubs.slice(0, 10);
 
-            const tbody = document.getElementById('lbBody');
-            tbody.innerHTML = '';
+                const tbody = document.getElementById('lbBody');
+                tbody.innerHTML = '';
 
-            top10.forEach((h, i) => {
-                const tr = document.createElement('tr');
-                tr.className = 'lb-rank-' + (i + 1);
+                top10.forEach((h, i) => {
+                    const tr = document.createElement('tr');
 
-                // Click row to select that country on the globe
-                tr.addEventListener('click', () => {
-                    const pt = globe.pointsData().find(p => p.iso3 === h.iso3);
-                    if (pt) {
-                        handlePointClick(pt);
-                        // Rotate globe to that country
-                        globe.pointOfView({ lat: h.lat, lng: h.lon, altitude: 2.0 }, 1000);
-                    }
+                    tr.addEventListener('click', () => {
+                        const pt = globe.pointsData().find(p => p.iso3 === h.iso3);
+                        if (pt) {
+                            handlePointClick(pt);
+                            globe.pointOfView({ lat: h.lat, lng: h.lon, altitude: 2.0 }, 1000);
+                        }
+                    });
+
+                    let ofacClass = 'lb-ofac-low';
+                    if (h.ofac > 500) ofacClass = 'lb-ofac-high';
+                    else if (h.ofac > 100) ofacClass = 'lb-ofac-med';
+
+                    tr.innerHTML =
+                        '<td class="lb-rank">' + (i + 1) + '</td>' +
+                        '<td class="lb-country">' + h.name + '</td>' +
+                        '<td class="lb-residual">' + h.residual.toFixed(3) + '</td>' +
+                        '<td class="lb-ofac"><span class="lb-ofac-badge ' + ofacClass + '">' + h.ofac + '</span></td>';
+
+                    tbody.appendChild(tr);
                 });
-
-                // OFAC badge class
-                let ofacClass = 'lb-ofac-low';
-                if (h.ofac > 500) ofacClass = 'lb-ofac-high';
-                else if (h.ofac > 100) ofacClass = 'lb-ofac-med';
-
-                tr.innerHTML =
-                    '<td class="lb-rank">' + (i + 1) + '</td>' +
-                    '<td class="lb-country">' + h.name + '</td>' +
-                    '<td class="lb-residual">' + h.residual.toFixed(3) + '</td>' +
-                    '<td class="lb-ofac"><span class="lb-ofac-badge ' + ofacClass + '">' + h.ofac + '</span></td>';
-
-                tbody.appendChild(tr);
-            });
+            }
         }
 
         // Initialize
