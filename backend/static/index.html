@@ -1143,25 +1143,27 @@
                     handlePointClick(point);
 
                     // Show flows for this country
-                    const countryFlows = edgesByYear[currentYear.toString()].filter(f =>
+                    const yearEdges = edgesByYear[currentYear.toString()] || [];
+                    const countryFlows = yearEdges.filter(f =>
                         f.exporter_iso3 === point.iso3 || f.importer_iso3 === point.iso3
                     );
 
-                    const arcsArray = countryFlows.map(f => ({
-                        startLat: countriesData[f.exporter_iso3].lat,
-                        startLng: countriesData[f.exporter_iso3].lon,
-                        endLat: countriesData[f.importer_iso3].lat,
-                        endLng: countriesData[f.importer_iso3].lon,
-                        color: () => {
-                            const vol = f.trade_value_usd;
-                            const maxVol = Math.max(...countryFlows.map(ff => ff.trade_value_usd));
-                            const pct = vol / maxVol;
-                            if (pct > 0.9) return '#ffd700';
-                            if (pct > 0.75) return '#a0d2ff';
-                            return '#5282c8';
-                        },
-                        value: f.trade_value_usd
-                    }));
+                    // Pre-compute max volume once
+                    const maxVol = countryFlows.length > 0 ? Math.max(...countryFlows.map(f => f.trade_value_usd)) : 1;
+
+                    const arcsArray = countryFlows
+                        .filter(f => countriesData[f.exporter_iso3] && countriesData[f.importer_iso3])
+                        .map(f => {
+                            const pct = f.trade_value_usd / maxVol;
+                            return {
+                                startLat: countriesData[f.exporter_iso3].lat,
+                                startLng: countriesData[f.exporter_iso3].lon,
+                                endLat: countriesData[f.importer_iso3].lat,
+                                endLng: countriesData[f.importer_iso3].lon,
+                                color: pct > 0.9 ? '#ffd700' : pct > 0.75 ? '#a0d2ff' : '#5282c8',
+                                value: f.trade_value_usd
+                            };
+                        });
 
                     globe.arcsData(arcsArray);
 
@@ -1170,6 +1172,7 @@
                     const vol = countryFlows.reduce((s, f) => s + f.trade_value_usd, 0);
                     document.getElementById('volumeTotal').textContent =
                         vol > 1e12 ? '$' + (vol / 1e12).toFixed(2) + 'T' : '$' + (vol / 1e9).toFixed(1) + 'B';
+                    document.getElementById('topFlow').textContent = (point.name || point.iso3) + ': ' + countryFlows.length + ' flows';
                 });
 
                 // Initial visualization
