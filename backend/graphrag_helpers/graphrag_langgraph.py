@@ -668,7 +668,7 @@ Question: {question}
 
                 elif intent == "clustering_analysis":
                     iso3 = plan.get("country_iso3")
-                    year = plan.get("year", self._latest_year())
+                    year = plan.get("year") or self._latest_year()
                     params = {"iso3": iso3, "year": int(year)}
                     rows = self.neo4j.run_read(
                         """
@@ -690,7 +690,7 @@ Question: {question}
                     cypher_evidence.append({"citation_id": cid, "type": "clustering_analysis", "rows": rows})
 
                 elif intent == "sanctions_hubs":
-                    year = plan.get("year", self._latest_year())
+                    year = plan.get("year") or self._latest_year()
                     params = {"year": int(year), "top_n": top_n}
                     rows = self.neo4j.run_read(
                         """
@@ -736,7 +736,7 @@ Question: {question}
                 elif intent == "comparative":
                     iso3_a = plan.get("country_iso3")
                     iso3_b = plan.get("country_iso3_b")
-                    year = plan.get("year", self._latest_year())
+                    year = plan.get("year") or self._latest_year()
                     params = {"iso3_a": iso3_a, "iso3_b": iso3_b, "year": int(year)}
                     rows = self.neo4j.run_read(
                         """
