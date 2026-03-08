@@ -3,7 +3,7 @@ import uuid
 import time
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -65,6 +65,7 @@ async def shutdown():
 
 
 @app.get("/health")
+@app.head("/health")
 async def health():
     return {
         "status": "ok" if assistant else "not_ready",
@@ -169,6 +170,11 @@ async def root():
         return FileResponse("static/index.html")
     except FileNotFoundError:
         return {"message": "Welcome to Shadow Hubs GraphRAG API", "endpoints": ["/health", "/ask", "/rebuild-index"]}
+
+
+@app.head("/")
+async def root_head():
+    return Response(status_code=200)
 
 
 # Mount static files directories
