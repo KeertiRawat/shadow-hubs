@@ -12,7 +12,7 @@ A multi-layer analysis of illicit oil trade networks combining OFAC sanctions da
 
 | Demo | Description |
 |------|-------------|
-| **[Interactive Globe + AI Chat →](YOUR_RENDER_URL)** | Full experience: 3D globe with GraphRAG chat panel. Ask questions about shadow hubs, sanctions, and trade patterns. |
+| **[Interactive Globe + AI Chat →](https://shadow-hubs.onrender.com)** | Full experience: 3D globe with GraphRAG chat panel. Ask questions about shadow hubs, sanctions, and trade patterns. |
 | **[Globe Only (GitHub Pages) →](https://ahmerrill.github.io/shadow-hubs/viz/globe_viz.html)** | Lightweight 3D globe visualization — no AI chat, runs entirely client-side. |
 
 ---
@@ -89,7 +89,7 @@ User Question → Plan (classify intent) → Retrieve (Cypher + Vector) → Draf
 
 | Resource | Link |
 |----------|------|
-| **Full Demo (Globe + AI)** | [Launch on Render](YOUR_RENDER_URL) |
+| **Full Demo (Globe + AI)** | [Launch on Render](https://shadow-hubs.onrender.com) |
 | **Globe Only** | [Launch on GitHub Pages](https://ahmerrill.github.io/shadow-hubs/viz/globe_viz.html) |
 | **Analysis Notebook** | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AHMerrill/shadow-hubs/blob/main/notebooks/SMA-Final_Project.ipynb) |
 | **Presentation** | [View in Canva](https://www.canva.com/d/V20Mq3zMpjkJAd2) |
