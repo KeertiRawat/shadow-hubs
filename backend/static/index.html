@@ -353,25 +353,28 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            height: 48px;
+            padding: 0 20px;
+            border-radius: 24px;
             background: rgba(20, 28, 50, 0.95);
             border: 2px solid rgba(100, 150, 255, 0.5);
             color: #64b5f6;
-            font-size: 28px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             z-index: 200;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
             transition: all 0.3s ease;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
+            font-family: inherit;
         }
 
         .chat-toggle-btn:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             border-color: rgba(100, 180, 255, 0.8);
             background: rgba(30, 40, 70, 0.95);
         }
@@ -404,6 +407,27 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-close-btn {
+            background: none;
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            color: #90caf9;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .chat-close-btn:hover {
+            background: rgba(255, 100, 100, 0.2);
+            border-color: rgba(255, 100, 100, 0.5);
+            color: #ff6b6b;
         }
 
         .chat-messages {
@@ -700,10 +724,13 @@
     </div>
 
     <!-- Chat Panel -->
-    <button class="chat-toggle-btn" id="chatToggleBtn" title="Open Chat">💬</button>
+    <button class="chat-toggle-btn" id="chatToggleBtn" title="Ask AI about shadow hubs">🤖 Ask AI</button>
 
     <div class="chat-panel" id="chatPanel">
-        <div class="chat-header">Shadow Hubs AI</div>
+        <div class="chat-header">
+            <span>Shadow Hubs AI</span>
+            <button class="chat-close-btn" id="chatCloseBtn" title="Close chat">✕</button>
+        </div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-starters" id="chatStarters">
             <div class="starter-chip" data-question="Top shadow hubs 2024">Top shadow hubs 2024</div>
@@ -743,11 +770,17 @@
             const chatSendBtn = document.getElementById('chatSendBtn');
             const starters = document.querySelectorAll('.starter-chip');
 
+            const chatCloseBtn = document.getElementById('chatCloseBtn');
+
             chatToggleBtn.addEventListener('click', () => {
                 chatPanel.classList.toggle('open');
                 if (chatPanel.classList.contains('open')) {
                     chatInput.focus();
                 }
+            });
+
+            chatCloseBtn.addEventListener('click', () => {
+                chatPanel.classList.remove('open');
             });
 
             // Auto-resize textarea
@@ -967,6 +1000,21 @@
                     .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/earth-night.jpg')
                     .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/earth-topology.png')
                     .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/night-sky.png')
+                    .pointLat('lat')
+                    .pointLng('lon')
+                    .pointColor('color')
+                    .pointRadius('radius')
+                    .pointAltitude(0.01)
+                    .pointLabel(d => `<b>${d.name || d.iso3}</b><br>OFAC: ${d.ofac_entities || 0}<br>Shadow Rank: ${d.shadow_rank === 999 ? 'N/A' : d.shadow_rank}`)
+                    .arcStartLat('startLat')
+                    .arcStartLng('startLng')
+                    .arcEndLat('endLat')
+                    .arcEndLng('endLng')
+                    .arcColor('color')
+                    .arcStroke(0.5)
+                    .arcDashLength(0.4)
+                    .arcDashGap(0.2)
+                    .arcDashAnimateTime(1500)
                     (container);
 
                 // Set initial view
