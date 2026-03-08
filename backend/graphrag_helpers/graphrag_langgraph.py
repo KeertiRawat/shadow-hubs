@@ -997,7 +997,7 @@ Issues:
                 return "rewrite"
             return "clarify"
 
-        graph_builder.add_node("plan", plan_question)
+        graph_builder.add_node("classify", plan_question)
         graph_builder.add_node("retrieve", retrieve_hybrid)
         graph_builder.add_node("draft", draft_answer)
         graph_builder.add_node("evaluate", evaluate_answer)
@@ -1005,8 +1005,8 @@ Issues:
         graph_builder.add_node("finalize", finalize)
         graph_builder.add_node("clarify", ask_for_clarification)
 
-        graph_builder.add_edge(START, "plan")
-        graph_builder.add_edge("plan", "retrieve")
+        graph_builder.add_edge(START, "classify")
+        graph_builder.add_edge("classify", "retrieve")
         graph_builder.add_edge("retrieve", "draft")
         graph_builder.add_edge("draft", "evaluate")
         graph_builder.add_conditional_edges(
@@ -1014,7 +1014,7 @@ Issues:
             route_after_eval,
             {"finalize": "finalize", "rewrite": "rewrite", "clarify": "clarify"},
         )
-        graph_builder.add_edge("rewrite", "plan")
+        graph_builder.add_edge("rewrite", "classify")
         graph_builder.add_edge("finalize", END)
         graph_builder.add_edge("clarify", END)
         return graph_builder.compile()
