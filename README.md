@@ -1,18 +1,19 @@
 # 🛢️ Shadow Hubs in Global Oil Trade
 
-**Network Analytics & Sanctions Overlay**
+**Network Analytics & Sanctions Overlay · GraphRAG-Powered Intelligence**
 
-A multi-layer analysis of illicit oil trade networks combining OFAC sanctions data, UN Comtrade bilateral flows (2019–2024), and graph-theoretic "shadow hub" detection. Built as a final project for *Social Media & Network Analytics — Spring 2026*.
+A multi-layer analysis of illicit oil trade networks combining OFAC sanctions data, UN Comtrade bilateral flows (2019–2024), graph-theoretic "shadow hub" detection, and an AI-powered Graph RAG system for natural-language querying. Built as a final project for *Social Media & Network Analytics — Spring 2026*.
 
 > **Shadow hubs** are countries whose betweenness centrality in the oil trade network is anomalously high relative to their trade volume — structurally positioned as intermediaries in ways that merit further investigation for potential sanctions circumvention.
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Live Demos
 
-**[Launch the Interactive Globe →](https://ahmerrill.github.io/shadow-hubs/notebooks/globe_viz.html)**
-
-Click any country dot to reveal its trade flows. Switch years (2019–2024) to see how the network shifts post-sanctions.
+| Demo | Description |
+|------|-------------|
+| **[Interactive Globe + AI Chat →](YOUR_RENDER_URL)** | Full experience: 3D globe with GraphRAG chat panel. Ask questions about shadow hubs, sanctions, and trade patterns. |
+| **[Globe Only (GitHub Pages) →](https://ahmerrill.github.io/shadow-hubs/viz/globe_viz.html)** | Lightweight 3D globe visualization — no AI chat, runs entirely client-side. |
 
 ---
 
@@ -21,18 +22,34 @@ Click any country dot to reveal its trade flows. Switch years (2019–2024) to s
 ```
 shadow-hubs/
 ├── README.md
-├── .env.example              ← credential template (copy to .env)
+├── .env.example                  ← credential template (copy to .env)
 ├── .gitignore
 ├── data/
-│   ├── edges_country_oil_2019plus.csv    (45K directed trade flows)
-│   ├── nodes_country_oil_2019plus.csv    (232 countries with OFAC counts)
-│   ├── ofac_country_agg.csv              (OFAC entity aggregation)
-│   └── shadow_hubs_residual_2019plus.csv (413 shadow hub scores)
+│   ├── edges_country_oil_2019plus.csv      (45K directed trade flows)
+│   ├── nodes_country_oil_2019plus.csv      (232 countries with OFAC counts)
+│   ├── ofac_country_agg.csv                (OFAC entity aggregation)
+│   └── shadow_hubs_residual_2019plus.csv   (413 shadow hub scores)
 ├── notebooks/
-│   ├── SMA-Final Project.ipynb           (main analysis notebook)
-│   ├── auradb_load.cypher                (Neo4j load scripts + demo queries)
-│   ├── globe_viz.html                    (3D interactive visualization)
-│   └── VISUALIZATION_README.md           (globe technical docs)
+│   ├── SMA-Final_Project.ipynb             (main analysis notebook)
+│   ├── network_analysis.ipynb              (clustering coefficient analysis)
+│   └── auradb_load.cypher                  (Neo4j load scripts + demo queries)
+├── viz/
+│   ├── globe_viz.html                      (standalone 3D globe for GitHub Pages)
+│   ├── VISUALIZATION_README.md             (globe technical docs)
+│   ├── network_viz_2024.png
+│   └── network_viz_2024_light.png
+├── backend/
+│   ├── Dockerfile                          (container config for Render)
+│   ├── requirements.txt                    (Python dependencies)
+│   ├── main.py                             (FastAPI app — serves globe + /ask API)
+│   ├── graphrag_helpers/
+│   │   ├── __init__.py
+│   │   └── graphrag_langgraph.py           (enhanced GraphRAG with 9 intents)
+│   └── static/
+│       └── index.html                      (globe + chat panel, served by FastAPI)
+├── GraphRAG/                               (original GraphRAG prototype by Stiles)
+│   ├── RAG_driver.ipynb
+│   └── graphrag_helpers/
 └── docs/
     ├── Data dictionary - SMA Final Project.docx
     └── HANDOFF README- Final Project.docx
@@ -40,16 +57,44 @@ shadow-hubs/
 
 ---
 
+## 🤖 GraphRAG Architecture
+
+The AI chat is powered by a **LangGraph workflow** with hybrid retrieval:
+
+```
+User Question → Plan (classify intent) → Retrieve (Cypher + Vector) → Draft Answer → Evaluate → Finalize
+```
+
+**9 question intents** with specialized Cypher queries:
+
+| Intent | Example Question |
+|--------|-----------------|
+| `hub_partners` | "Who are Singapore's top trade partners in 2024?" |
+| `shadow_explanation` | "What makes the USA the top shadow hub?" |
+| `top_shadow_hubs` | "Rank the top 10 shadow hubs in 2024" |
+| `emerging_hubs` | "Which countries grew as shadow hubs after 2022?" |
+| `clustering_analysis` | "How does Singapore move oil? Is it a broker?" |
+| `sanctions_hubs` | "Which sanctioned countries are also shadow hubs?" |
+| `temporal_trend` | "How has Spain's shadow rank changed over time?" |
+| `comparative` | "Compare Singapore and Georgia" |
+| `general` | Anything else |
+
+**Conceptual knowledge base** includes embedded explanations of: shadow hub theory, betweenness centrality, the regression ceiling (why USA ranks #1), OFAC enforcer bias, the post-2022 sanctions shockwave, and the exclusive broker vs. laundering syndicate clustering patterns.
+
+**Cost:** ~$0.001 per query using OpenAI gpt-4o-mini. Even 1,000 queries costs ~$1.
+
+---
+
 ## 🚀 Quick Links
 
 | Resource | Link |
 |----------|------|
-| **Analysis Notebook** | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AHMerrill/shadow-hubs/blob/main/notebooks/SMA-Final%20Project.ipynb) |
+| **Full Demo (Globe + AI)** | [Launch on Render](YOUR_RENDER_URL) |
+| **Globe Only** | [Launch on GitHub Pages](https://ahmerrill.github.io/shadow-hubs/viz/globe_viz.html) |
+| **Analysis Notebook** | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AHMerrill/shadow-hubs/blob/main/notebooks/SMA-Final_Project.ipynb) |
 | **Presentation** | [View in Canva](https://www.canva.com/d/V20Mq3zMpjkJAd2) |
-| **Interactive Globe** | [Launch in Browser](https://ahmerrill.github.io/shadow-hubs/notebooks/globe_viz.html) |
 | **Neo4j Load Scripts** | [`notebooks/auradb_load.cypher`](notebooks/auradb_load.cypher) |
 | **Data Dictionary** | [`docs/Data dictionary - SMA Final Project.docx`](docs/Data%20dictionary%20-%20SMA%20Final%20Project.docx) |
-| **Datasets** | [`data/`](data/) |
 
 ---
 
@@ -57,71 +102,57 @@ shadow-hubs/
 
 ### Data Pipeline
 
-1. **OFAC SDN List** — Parsed the U.S. Treasury's Specially Designated Nationals list, aggregating sanctioned entities by country jurisdiction. Note: OFAC targets *entities* (individuals, companies, vessels), not countries per se.
+1. **OFAC SDN List** — Parsed the U.S. Treasury's Specially Designated Nationals list, aggregating sanctioned entities by country jurisdiction.
 
 2. **UN Comtrade** — Pulled bilateral oil trade flows (HS 2709–2710) for 230+ countries across 2019–2024 via the Comtrade API.
 
 3. **Network Construction** — Built directed weighted graphs per year, pruned noise edges, computed betweenness centrality, degree, and total trade volume per node.
 
-4. **Shadow Hub Detection** — Regressed log-betweenness on log-volume; countries with high positive residuals are structurally positioned as intermediaries beyond what their trade volume would predict. These are "shadow hubs" — not necessarily illicit, but warranting further investigation.
+4. **Shadow Hub Detection** — Regressed log-betweenness on log-volume; countries with high positive residuals are structurally positioned as intermediaries beyond what their trade volume would predict.
+
+5. **Clustering Analysis** — Computed weighted clustering coefficients for all countries to classify hub behavior: low clustering = exclusive broker (e.g., Singapore); high clustering = laundering syndicate (e.g., Georgia).
 
 ### Graph Database
 
-All data loaded into **Neo4j AuraDB** (free tier) for Cypher-based querying:
+All data loaded into **Neo4j AuraDB** for Cypher-based querying:
 
 - **232** Country nodes with OFAC metadata
 - **45,513** directed TRADE edges (year-partitioned)
-- **6** Year nodes with **413** SHADOW_HUB relationships
-
-See [`auradb_load.cypher`](notebooks/auradb_load.cypher) for the complete load script and 8 demo queries (top shadow hubs, OFAC-exposed hubs, emerging hubs post-2022, country trajectory over time, etc.).
-
-### Interactive Visualization
-
-A self-contained [3D globe](https://ahmerrill.github.io/shadow-hubs/notebooks/globe_viz.html) built with [Globe.gl](https://globe.gl/) showing:
-
-- **Country dots** sized by shadow hub rank, colored by OFAC exposure
-- **Click-to-reveal** trade flow arcs for any country
-- **Year selector** (2019–2024) to watch network evolution
-- **Country borders** via TopoJSON overlay
+- **413** SHADOW_HUB relationships with betweenness, shadow residual, rank, trade volume, and clustering coefficients
 
 ---
 
 ## 🛠️ Setup
 
-### Prerequisites
+### Deploy the Full App (Render + Docker)
 
-- Python 3.9+
-- [UN Comtrade API key](https://comtradeplus.un.org/) (free)
-- [Neo4j AuraDB](https://console.neo4j.io/) instance (free tier)
+1. Fork this repo
+2. Create a new **Web Service** on [Render](https://render.com)
+3. Connect your GitHub repo, set root directory to `backend/`
+4. Choose **Docker** as the environment
+5. Add environment variables:
+   - `NEO4J_URI` — your AuraDB connection URI
+   - `NEO4J_USERNAME` — AuraDB username
+   - `NEO4J_PASSWORD` — AuraDB password
+   - `NEO4J_DATABASE` — AuraDB database name
+   - `OPENAI_API_KEY` — your OpenAI API key
+6. Deploy
 
-### Credentials
-
-```bash
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-The notebook reads credentials from environment variables via `python-dotenv` — no hardcoded secrets.
-
-### Running the Notebook
-
-The fastest way is via Google Colab:
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AHMerrill/shadow-hubs/blob/main/notebooks/SMA-Final%20Project.ipynb)
-
-Or locally:
+### Run Locally
 
 ```bash
-pip install jupyter pandas neo4j python-dotenv comtradeapicall
-jupyter notebook notebooks/SMA-Final\ Project.ipynb
+cd backend
+cp ../.env.example .env  # Edit with your credentials
+pip install -r requirements.txt
+uvicorn main:app --reload
+# Open http://localhost:8000
 ```
 
-### Loading Neo4j
+### Neo4j Setup
 
 1. Create a free AuraDB instance at [console.neo4j.io](https://console.neo4j.io)
-2. Add your credentials to `.env`
-3. Run the Cypher scripts in [`auradb_load.cypher`](notebooks/auradb_load.cypher) in order (Steps 1–4)
-4. Verify with Step 5 queries
+2. Add credentials to `.env`
+3. Run the Cypher scripts in [`auradb_load.cypher`](notebooks/auradb_load.cypher)
 
 ---
 

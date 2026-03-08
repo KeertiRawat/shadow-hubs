@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Oil Trade Shadow Hubs - 3D Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #globeContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(20, 28, 50, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 100;
+            min-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .controls h2 {
+            margin-bottom: 15px;
+            color: #64b5f6;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #90caf9;
+            font-weight: 500;
+        }
+
+        .year-selector {
+            width: 100%;
+            padding: 10px;
+            background: rgba(30, 40, 70, 0.8);
+            border: 1px solid rgba(100, 150, 255, 0.4);
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .year-selector:hover {
+            background: rgba(40, 50, 90, 0.8);
+            border-color: rgba(100, 180, 255, 0.6);
+        }
+
+        .stats {
+            background: rgba(15, 25, 50, 0.6);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.1);
+        }
+
+        .stats-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .stats-label {
+            color: #90caf9;
+            font-weight: 500;
+        }
+
+        .stats-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(20, 28, 50, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .legend h3 {
+            margin-bottom: 12px;
+            color: #64b5f6;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 28, 50, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 100;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .info-panel h3 {
+            color: #64b5f6;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .info-label {
+            color: #90caf9;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #fff;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .readme-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 28, 50, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            z-index: 100;
+            max-width: 380px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .readme-panel.collapsed .info-content {
+            display: none;
+        }
+
+        .info-toggle {
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #64b5f6;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .info-toggle:hover {
+            color: #90caf9;
+        }
+
+        .info-content {
+            padding: 0 16px 16px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-content h3 {
+            color: #64b5f6;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-content h4 {
+            color: #90caf9;
+            font-size: 13px;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        .info-content p {
+            margin-bottom: 8px;
+            color: #c0c8e0;
+        }
+
+        .info-content ul {
+            margin: 6px 0 10px 16px;
+            color: #c0c8e0;
+        }
+
+        .info-content li {
+            margin-bottom: 4px;
+        }
+
+        .leaderboard {
+            position: absolute;
+            top: 260px;
+            left: 20px;
+            background: rgba(20, 28, 50, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 100;
+            min-width: 300px;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .leaderboard h3 {
+            margin-bottom: 10px;
+            color: #64b5f6;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .leaderboard-table th {
+            text-align: left;
+            color: #90caf9;
+            font-weight: 600;
+            padding: 4px 6px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.3);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .leaderboard-table td {
+            padding: 6px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background: rgba(100, 150, 255, 0.1);
+        }
+
+        .lb-rank {
+            color: #90caf9;
+            font-weight: 600;
+            width: 30px;
+        }
+
+        .lb-country {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .lb-residual {
+            color: #a0d2ff;
+            text-align: right;
+        }
+
+        .lb-ofac-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .lb-ofac-low {
+            background: rgba(66, 165, 245, 0.2);
+            color: #42a5f5;
+        }
+
+        .lb-ofac-med {
+            background: rgba(255, 159, 67, 0.2);
+            color: #ff9f43;
+        }
+
+        .lb-ofac-high {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        /* CHAT PANEL STYLES */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(20, 28, 50, 0.95);
+            border: 2px solid rgba(100, 150, 255, 0.5);
+            color: #64b5f6;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1);
+            border-color: rgba(100, 180, 255, 0.8);
+            background: rgba(30, 40, 70, 0.95);
+        }
+
+        .chat-panel {
+            position: fixed;
+            right: -380px;
+            top: 0;
+            width: 380px;
+            height: 100vh;
+            background: rgba(20, 28, 50, 0.98);
+            border-left: 1px solid rgba(100, 150, 255, 0.3);
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-panel.open {
+            right: 0;
+        }
+
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+            color: #64b5f6;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message-bubble.user {
+            background: rgba(66, 133, 244, 0.3);
+            border: 1px solid rgba(66, 133, 244, 0.5);
+            color: #a0d2ff;
+            margin-left: auto;
+            border-radius: 8px 0 8px 8px;
+        }
+
+        .message-bubble.assistant {
+            background: rgba(100, 150, 255, 0.15);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            color: #e0e0e0;
+            border-radius: 0 8px 8px 8px;
+        }
+
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+
+        .chat-starters {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .starter-chip {
+            padding: 8px 12px;
+            background: rgba(100, 150, 255, 0.1);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 16px;
+            color: #90caf9;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .starter-chip:hover {
+            background: rgba(100, 150, 255, 0.2);
+            border-color: rgba(100, 150, 255, 0.5);
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            border-top: 1px solid rgba(100, 150, 255, 0.2);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(30, 40, 70, 0.8);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            resize: none;
+            max-height: 100px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: rgba(100, 150, 255, 0.6);
+            background: rgba(40, 50, 90, 0.8);
+        }
+
+        .chat-send-btn {
+            padding: 10px 14px;
+            background: rgba(66, 133, 244, 0.3);
+            border: 1px solid rgba(66, 133, 244, 0.5);
+            border-radius: 4px;
+            color: #64b5f6;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+            background: rgba(66, 133, 244, 0.5);
+            border-color: rgba(66, 133, 244, 0.8);
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #64b5f6;
+            animation: pulse 1.4s infinite;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .citation-badge {
+            display: inline-block;
+            font-size: 10px;
+            vertical-align: super;
+            margin: 0 1px;
+            padding: 1px 4px;
+            background: rgba(100, 150, 255, 0.4);
+            border-radius: 3px;
+            color: #a0d2ff;
+            font-weight: 600;
+        }
+
+        .sources-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(100, 150, 255, 0.2);
+        }
+
+        .sources-toggle {
+            cursor: pointer;
+            color: #90caf9;
+            font-weight: 600;
+            font-size: 12px;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sources-toggle:hover {
+            color: #64b5f6;
+        }
+
+        .sources-list {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #a0d2ff;
+            display: none;
+        }
+
+        .sources-list.show {
+            display: block;
+        }
+
+        .source-item {
+            margin-bottom: 6px;
+            padding-left: 12px;
+        }
+
+        .source-item strong {
+            color: #64b5f6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="globeContainer"></div>
+
+    <div class="controls">
+        <h2>CONTROLS</h2>
+        <div class="control-group">
+            <label for="yearSelect">Year</label>
+            <select id="yearSelect" class="year-selector">
+                <option value="2019">2019</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024" selected>2024</option>
+            </select>
+        </div>
+        <div class="stats">
+            <div class="stats-row">
+                <span class="stats-label">Countries</span>
+                <span class="stats-value" id="countryCount">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Flows</span>
+                <span class="stats-value" id="flowCount">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Volume</span>
+                <span class="stats-value" id="volumeTotal">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Top Flow</span>
+                <span class="stats-value" id="topFlow">—</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>LEGEND</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#ff6b6b;"></div>
+            <span>High OFAC (>500)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#ff9f43;"></div>
+            <span>Medium OFAC (100-500)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#42a5f5;"></div>
+            <span>Low/No OFAC</span>
+        </div>
+        <div class="legend-item">
+            <span>Dot size = Shadow hub rank</span>
+        </div>
+    </div>
+
+    <div class="leaderboard">
+        <h3>TOP SHADOW HUBS (<span id="lbYear">2024</span>)</h3>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Country</th>
+                    <th>Residual</th>
+                    <th>OFAC</th>
+                </tr>
+            </thead>
+            <tbody id="lbBody">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Chat Panel -->
+    <button class="chat-toggle-btn" id="chatToggleBtn" title="Open Chat">💬</button>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">Shadow Hubs AI</div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-starters" id="chatStarters">
+            <div class="starter-chip" data-question="Top shadow hubs 2024">Top shadow hubs 2024</div>
+            <div class="starter-chip" data-question="How has Spain changed since 2022?">How has Spain changed since 2022?</div>
+            <div class="starter-chip" data-question="Compare Singapore and Georgia">Compare Singapore and Georgia</div>
+            <div class="starter-chip" data-question="Which sanctioned countries are shadow hubs?">Which sanctioned countries are shadow hubs?</div>
+            <div class="starter-chip" data-question="How does Singapore move oil?">How does Singapore move oil?</div>
+        </div>
+        <div class="chat-input-area">
+            <textarea class="chat-input" id="chatInput" placeholder="Ask about shadow hubs..." rows="1"></textarea>
+            <button class="chat-send-btn" id="chatSendBtn">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/globe.gl@2.31.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128"></script>
+
+    <script>
+        // Global state
+        let globe;
+        let selectedCountry = null;
+        let countriesData = {};
+        let shadowLookup = {};
+        let edgesByYear = {};
+        let currentYear = 2024;
+        let sessionId = '';
+
+        // Initialize session
+        function initSession() {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Chat functionality
+        function initChat() {
+            const chatToggleBtn = document.getElementById('chatToggleBtn');
+            const chatPanel = document.getElementById('chatPanel');
+            const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const starters = document.querySelectorAll('.starter-chip');
+
+            chatToggleBtn.addEventListener('click', () => {
+                chatPanel.classList.toggle('open');
+                if (chatPanel.classList.contains('open')) {
+                    chatInput.focus();
+                }
+            });
+
+            // Auto-resize textarea
+            chatInput.addEventListener('input', () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+            });
+
+            // Send on Enter (but allow Shift+Enter for newlines)
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            chatSendBtn.addEventListener('click', sendMessage);
+
+            // Starter chips
+            starters.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const question = chip.dataset.question;
+                    chatInput.value = question;
+                    chatInput.style.height = 'auto';
+                    sendMessage();
+                });
+            });
+        }
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const chatStarters = document.getElementById('chatStarters');
+
+            // Hide starters on first message
+            if (chatStarters.style.display !== 'none') {
+                chatStarters.style.display = 'none';
+            }
+
+            // Add user message
+            const userBubble = document.createElement('div');
+            userBubble.className = 'chat-message user';
+            userBubble.innerHTML = '<div class="message-bubble user">' + escapeHtml(message) + '</div>';
+            chatMessages.appendChild(userBubble);
+
+            // Add loading indicator
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-message';
+            loadingBubble.id = 'loadingBubble';
+            loadingBubble.innerHTML = '<div class="message-bubble assistant"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+            chatMessages.appendChild(loadingBubble);
+
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Clear input
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // Get year
+            const yearSelect = document.getElementById('yearSelect');
+            const year = yearSelect.value;
+
+            // Send to API
+            fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: message,
+                    session_id: sessionId,
+                    year: year
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                // Remove loading bubble
+                const loading = document.getElementById('loadingBubble');
+                if (loading) loading.remove();
+
+                // Add response
+                const responseBubble = document.createElement('div');
+                responseBubble.className = 'chat-message';
+
+                let responseHtml = '<div class="message-bubble assistant">';
+
+                // Process answer with markdown-like formatting and citations
+                let answer = data.answer || '';
+                answer = formatMarkdown(answer);
+                responseHtml += answer;
+
+                // Add sources if present
+                if (data.sources && data.sources.length > 0) {
+                    responseHtml += '<div class="sources-section">';
+                    responseHtml += '<div class="sources-toggle" onclick="this.nextElementSibling.classList.toggle(\'show\')">';
+                    responseHtml += '<span>📎 Sources (' + data.sources.length + ')</span>';
+                    responseHtml += '</div>';
+                    responseHtml += '<div class="sources-list">';
+                    data.sources.forEach((source, idx) => {
+                        responseHtml += '<div class="source-item"><strong>[' + (idx + 1) + ']</strong> ' + escapeHtml(source.title || source) + '</div>';
+                    });
+                    responseHtml += '</div>';
+                    responseHtml += '</div>';
+                }
+
+                responseHtml += '</div>';
+                responseBubble.innerHTML = responseHtml;
+                chatMessages.appendChild(responseBubble);
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Handle clarification if needed
+                if (data.needs_clarification && data.clarification_question) {
+                    const clarBubble = document.createElement('div');
+                    clarBubble.className = 'chat-message';
+                    clarBubble.innerHTML = '<div class="message-bubble assistant">' + escapeHtml(data.clarification_question) + '</div>';
+                    chatMessages.appendChild(clarBubble);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            })
+            .catch(err => {
+                // Remove loading bubble
+                const loading = document.getElementById('loadingBubble');
+                if (loading) loading.remove();
+
+                // Add error
+                const errorBubble = document.createElement('div');
+                errorBubble.className = 'chat-message';
+                errorBubble.innerHTML = '<div class="message-bubble assistant">Sorry, there was an error: ' + escapeHtml(err.message) + '</div>';
+                chatMessages.appendChild(errorBubble);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+
+        function formatMarkdown(text) {
+            // Handle bold (**text**)
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Handle italics (*text*)
+            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+            // Handle citations [C1], [V2], etc.
+            text = text.replace(/\[([CV]\d+)\]/g, '<span class="citation-badge">$1</span>');
+
+            // Handle line breaks
+            text = text.replace(/\n/g, '<br>');
+
+            return text;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Handle point click and add to chat
+        function handlePointClick(point) {
+            selectedCountry = point;
+            const year = document.getElementById('yearSelect').value;
+            const question = 'Tell me about ' + (point.name || point.iso3) + ' as a shadow hub in ' + year;
+
+            // Open chat panel and populate input
+            const chatPanel = document.getElementById('chatPanel');
+            const chatInput = document.getElementById('chatInput');
+
+            chatInput.value = question;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+
+            if (!chatPanel.classList.contains('open')) {
+                chatPanel.classList.add('open');
+            }
+        }
+
+        async function initGlobe() {
+            initSession();
+            initChat();
+
+            try {
+                // Load data
+                const [countriesResp, shadowResp, edgesResp] = await Promise.all([
+                    fetch('data/countries.json').then(r => r.json()),
+                    fetch('data/shadow_hubs.json').then(r => r.json()),
+                    fetch('data/edges.json').then(r => r.json())
+                ]);
+
+                // Process countries
+                countriesResp.forEach(c => {
+                    countriesData[c.iso3] = c;
+                });
+
+                // Process shadow hubs
+                shadowResp.forEach(sh => {
+                    const key = sh.year + '_' + sh.iso3;
+                    shadowLookup[key] = sh;
+                });
+
+                // Process edges by year
+                edgesResp.forEach(edge => {
+                    const yearStr = edge.year.toString();
+                    if (!edgesByYear[yearStr]) edgesByYear[yearStr] = [];
+                    edgesByYear[yearStr].push(edge);
+                });
+
+                // Initialize globe
+                const container = document.getElementById('globeContainer');
+                globe = Globe()
+                    .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/earth-night.jpg')
+                    .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/earth-topology.png')
+                    .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe@2.30.1/example/img/night-sky.png')
+                    (container);
+
+                // Set initial view
+                globe.pointOfView({ lat: 0, lng: 0, altitude: 3 });
+
+                // Year change handler
+                document.getElementById('yearSelect').addEventListener('change', (e) => {
+                    currentYear = parseInt(e.target.value);
+                    updateVisualization(currentYear);
+                });
+
+                // Point click handler
+                globe.onPointClick((point) => {
+                    handlePointClick(point);
+
+                    // Show flows for this country
+                    const countryFlows = edgesByYear[currentYear.toString()].filter(f =>
+                        f.exporter_iso3 === point.iso3 || f.importer_iso3 === point.iso3
+                    );
+
+                    const arcsArray = countryFlows.map(f => ({
+                        startLat: countriesData[f.exporter_iso3].lat,
+                        startLng: countriesData[f.exporter_iso3].lon,
+                        endLat: countriesData[f.importer_iso3].lat,
+                        endLng: countriesData[f.importer_iso3].lon,
+                        color: () => {
+                            const vol = f.trade_value_usd;
+                            const maxVol = Math.max(...countryFlows.map(ff => ff.trade_value_usd));
+                            const pct = vol / maxVol;
+                            if (pct > 0.9) return '#ffd700';
+                            if (pct > 0.75) return '#a0d2ff';
+                            return '#5282c8';
+                        },
+                        value: f.trade_value_usd
+                    }));
+
+                    globe.arcsData(arcsArray);
+
+                    // Update stats
+                    document.getElementById('flowCount').textContent = countryFlows.length;
+                    const vol = countryFlows.reduce((s, f) => s + f.trade_value_usd, 0);
+                    document.getElementById('volumeTotal').textContent =
+                        vol > 1e12 ? '$' + (vol / 1e12).toFixed(2) + 'T' : '$' + (vol / 1e9).toFixed(1) + 'B';
+                });
+
+                // Initial visualization
+                updateVisualization(currentYear);
+
+            } catch (err) {
+                console.error('Init error:', err);
+            }
+        }
+
+        function updateVisualization(year) {
+            if (!globe) return;
+            try {
+                const yearStr = year.toString();
+                const flows = edgesByYear[yearStr] || [];
+
+                // Show ALL countries as points
+                const pointsArray = Object.values(countriesData).map(c => {
+                    const d = {...c};
+                    const shadowKey = year + '_' + d.iso3;
+                    if (shadowLookup[shadowKey]) {
+                        const sh = shadowLookup[shadowKey];
+                        d.shadow_resid = sh.shadow_resid;
+                        d.shadow_rank = sh.shadow_rank;
+                        d.betweenness = sh.betweenness;
+                        d.trade_total = sh.trade_total_usd;
+                    } else {
+                        d.shadow_resid = 0;
+                        d.shadow_rank = 999;
+                        d.betweenness = 0;
+                        d.trade_total = 0;
+                    }
+
+                    // Color by OFAC
+                    const ofac = d.ofac_entities || 0;
+                    if (ofac > 500) d.color = '#ff6b6b';
+                    else if (ofac > 100) d.color = '#ff9f43';
+                    else d.color = '#42a5f5';
+
+                    // Radius by shadow hub rank
+                    const rank = d.shadow_rank || 999;
+                    if (rank <= 3) d.radius = 1.8;
+                    else if (rank <= 10) d.radius = 1.2;
+                    else if (rank <= 25) d.radius = 0.7;
+                    else if (rank <= 50) d.radius = 0.4;
+                    else d.radius = 0.15;
+
+                    return d;
+                });
+
+                globe.pointsData(pointsArray);
+                globe.arcsData([]);
+                selectedCountry = null;
+
+                // Stats
+                const totalVolume = flows.reduce((sum, f) => sum + f.trade_value_usd, 0);
+                document.getElementById('flowCount').textContent = flows.length;
+                document.getElementById('volumeTotal').textContent =
+                    totalVolume > 1e12 ? '$' + (totalVolume / 1e12).toFixed(2) + 'T' : '$' + (totalVolume / 1e9).toFixed(1) + 'B';
+                document.getElementById('countryCount').textContent = pointsArray.length;
+                document.getElementById('topFlow').textContent = 'Click a country';
+
+                // Update leaderboard
+                updateLeaderboard(year);
+
+            } catch (err) {
+                console.error('Update error:', err);
+            }
+        }
+
+        function updateLeaderboard(year) {
+            const yearStr = year.toString();
+            document.getElementById('lbYear').textContent = yearStr;
+
+            // Collect all shadow hub entries for this year
+            const hubs = [];
+            for (const key in shadowLookup) {
+                if (key.startsWith(yearStr + '_')) {
+                    const iso3 = key.split('_')[1];
+                    const sh = shadowLookup[key];
+                    const country = countriesData[iso3];
+                    if (country && sh.shadow_rank && sh.shadow_rank <= 999) {
+                        hubs.push({
+                            iso3: iso3,
+                            name: country.name || iso3,
+                            rank: sh.shadow_rank,
+                            residual: sh.shadow_resid,
+                            ofac: country.ofac_entities || 0,
+                            lat: country.lat,
+                            lon: country.lon
+                        });
+                    }
+                }
+            }
+
+            // Sort by rank, take top 10
+            hubs.sort((a, b) => a.rank - b.rank);
+            const top10 = hubs.slice(0, 10);
+
+            const tbody = document.getElementById('lbBody');
+            tbody.innerHTML = '';
+
+            top10.forEach((h, i) => {
+                const tr = document.createElement('tr');
+                tr.className = 'lb-rank-' + (i + 1);
+
+                // Click row to select that country on the globe
+                tr.addEventListener('click', () => {
+                    const pt = globe.pointsData().find(p => p.iso3 === h.iso3);
+                    if (pt) {
+                        handlePointClick(pt);
+                        // Rotate globe to that country
+                        globe.pointOfView({ lat: h.lat, lng: h.lon, altitude: 2.0 }, 1000);
+                    }
+                });
+
+                // OFAC badge class
+                let ofacClass = 'lb-ofac-low';
+                if (h.ofac > 500) ofacClass = 'lb-ofac-high';
+                else if (h.ofac > 100) ofacClass = 'lb-ofac-med';
+
+                tr.innerHTML =
+                    '<td class="lb-rank">' + (i + 1) + '</td>' +
+                    '<td class="lb-country">' + h.name + '</td>' +
+                    '<td class="lb-residual">' + h.residual.toFixed(3) + '</td>' +
+                    '<td class="lb-ofac"><span class="lb-ofac-badge ' + ofacClass + '">' + h.ofac + '</span></td>';
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => initGlobe());
+        } else {
+            initGlobe();
+        }
+    </script>
+
+    <div class="readme-panel">
+        <div class="info-toggle">📖 About This Visualization</div>
+        <div class="info-content">
+            <h3>Shadow Hubs in Global Oil Trade</h3>
+            <p>This visualization maps bilateral crude and refined petroleum trade flows (UN Comtrade HS 2709/2710) from 2019 to 2024, overlaid with OFAC sanctions exposure and network-derived "shadow hub" scores.</p>
+
+            <h4>What are Shadow Hubs?</h4>
+            <p>A shadow hub is a country that is <em>unusually central</em> in the oil trade network relative to its actual trade volume. We measure this using betweenness centrality residuals: if a country sits on many shortest paths between trading partners but doesn't move much oil itself, it has a high shadow residual.</p>
+            <p>A high shadow residual does not prove illicit activity — it identifies structurally anomalous intermediaries that may warrant closer examination. Legitimate factors (geography, refining capacity, free trade zones) can also produce elevated centrality. These scores are best understood as a screening tool for further investigation, not as definitive indicators of sanctions evasion.</p>
+
+            <h4>Reading the Globe</h4>
+            <p><strong>Dots</strong> represent countries in the oil trade network. Note that OFAC sanctions target specific <em>entities</em> (individuals, companies, vessels) rather than countries per se — a high entity count reflects the number of sanctioned actors associated with that jurisdiction, not necessarily a blanket country-level sanction.</p>
+            <ul>
+                <li><span style="color:#ff6b6b">Red/pink dots</span> = high OFAC sanctions exposure (&gt;500 entities)</li>
+                <li><span style="color:#ff9f43">Orange dots</span> = medium OFAC exposure (100-500)</li>
+                <li><span style="color:#42a5f5">Blue dots</span> = low/zero OFAC exposure</li>
+                <li>Larger dots = higher shadow hub residual</li>
+            </ul>
+            <p><strong>Arcs</strong> appear when you click a country dot, showing all trade flows for that country.</p>
+            <ul>
+                <li><span style="color:#ffd700">Gold arcs</span> = top 10% by trade value</li>
+                <li><span style="color:#a0d2ff">Light blue arcs</span> = top 25%</li>
+                <li><span style="color:#5282c8">Dark blue arcs</span> = remaining flows</li>
+            </ul>
+
+            <h4>Key Observations</h4>
+            <ul>
+                <li>Canada &rarr; USA is consistently the largest single flow (~$300-450B/yr)</li>
+                <li>Russia's trade flows drop sharply after 2021 sanctions (213 flows &rarr; 33 by 2024)</li>
+                <li>Iran similarly contracts from 69 flows (2021) to 28 (2024)</li>
+                <li>Shadow hubs like UAE, Turkey, and Singapore show high centrality despite moderate volumes</li>
+            </ul>
+
+            <h4>Data Sources</h4>
+            <p>UN Comtrade (bilateral trade), OFAC SDN List (sanctions entities), custom network diagnostics (shadow hub residuals). Analysis period: 2019-2024.</p>
+        </div>
+    </div>
+
+</body>
+</html>
