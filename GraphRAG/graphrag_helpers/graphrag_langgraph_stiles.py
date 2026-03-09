@@ -96,24 +96,14 @@ class Neo4jReadClient:
 
 
 class QuestionPlan(BaseModel):
-    intent: Literal[
-        "hub_partners",
-        "shadow_explanation",
-        "top_shadow_hubs",
-        "top_shadow_hubs_all_years",
-        "highest_betweenness",
-        "sanctioned_shadow_trend",
-        "general",
-    ] = "general"
+    intent: Literal["hub_partners", "shadow_explanation", "top_shadow_hubs", "general"] = "general"
     country_name: Optional[str] = None
     country_iso3: Optional[str] = None
     year: Optional[int] = None
     top_n: int = 5
     needs_clarification: bool = False
     clarification_question: Optional[str] = None
-    retrieval_focus: str = Field(
-        default="Find direct graph evidence for the user question."
-    )
+    retrieval_focus: str = Field(default="Find direct graph evidence for the user question.")
 
 
 class QualityReport(BaseModel):
@@ -201,18 +191,6 @@ class HybridVectorIndex:
                     "source_type": "country_profile",
                     "text": text,
                     "metadata": {"iso3": row["iso3"], "name": row["name"]},
-                }
-            )
-            docs.append(
-                {
-                    "doc_id": "concept::shadow_hub_definition",
-                    "source_type": "concept_definition",
-                    "text": (
-                        "A shadow hub is a country whose betweenness centrality in the oil trade network "
-                        "is unusually high relative to its trade volume. "
-                        "This is a structural anomaly metric, not proof of illicit activity."
-                    ),
-                    "metadata": {"concept": "shadow_hub"},
                 }
             )
 
@@ -422,27 +400,11 @@ You are planning a graph retrieval strategy for an oil-trade graph with this sch
 
 Classify the question and extract parameters. Keep output strict.
 Rules:
-- intent='hub_partners' for questions asking import/export partners of a given country/shadow hub in a specific year.
-- intent='shadow_explanation' for questions asking what makes a country a shadow hub or whether a country behaves like a shadow hub.
-- intent='top_shadow_hubs' for questions asking for rankings or lists of shadow hubs for exactly one specific year only.
-- intent='top_shadow_hubs_all_years' for questions asking across all years, across all available years, over all years, over time, from one year to another year, highest ever, greatest shadow residual over time, maximum shadow residual, or top shadow hub in the entire dataset.
-- intent='sanctioned_shadow_trend' for questions asking for countries with OFAC/sanctions exposure that are also shadow hubs and show increasing activity over time.
+- intent='hub_partners' for questions asking import/export partners of a given shadow hub.
+- intent='shadow_explanation' for questions asking what makes a country a shadow hub.
+- intent='top_shadow_hubs' for questions asking rankings/lists of shadow hubs.
 - intent='general' otherwise.
-- intent='highest_betweenness' for questions asking which country has the highest betweenness in a given year.
-
-Critical classification rules:
-- If the question refers to multiple years, a year range, "across all years", "across all available years", "over all years", "over time", "highest ever", "maximum", or "from YEAR to YEAR", do NOT classify it as 'top_shadow_hubs'.
-- Questions about more than one year must be classified as 'top_shadow_hubs_all_years' unless they are specifically about sanctions trends.
-- Only use 'top_shadow_hubs' when the question is clearly about one single year.
-
-Examples:
-- "Who are the top shadow hubs in 2024?" -> intent='top_shadow_hubs'
-- "Across all years, which country is the top shadow hub?" -> intent='top_shadow_hubs_all_years'
-- "Which country has the greatest shadow residual over all available years?" -> intent='top_shadow_hubs_all_years'
-
-Other rules:
-- Do not request a specific country or year for list questions across countries or for multi-year trend questions.
-- If the question needs hub_partners but does not specify both country (name or ISO3) and year, set needs_clarification=true.
+- If the question needs hub_partners but does not specify both country (name or iso3) and year, set needs_clarification=true.
 - If year is missing for top_shadow_hubs or shadow_explanation, default to {latest_year}.
 - top_n defaults to {state.get('top_n_default', 5)}.
 
@@ -587,107 +549,6 @@ Question: {question}
                     )
                     cypher_evidence.append({"citation_id": cid, "type": "top_shadow_hubs", "rows": rows})
 
-                elif intent == "highest_betweenness":
-                    params = {"year": int(year)}
-                    rows = self.neo4j.run_read(
-                        """
-                        MATCH (c:Country)-[s:SHADOW_HUB]->(y:Year {year:$year})
-                        RETURN c.iso3 AS iso3,
-                               c.name AS name,
-                               y.year AS year,
-                               s.betweenness AS betweenness,
-                               s.shadow_resid AS shadow_resid,
-                               s.shadow_rank AS shadow_rank
-                        ORDER BY s.betweenness DESC
-                        LIMIT 1
-                        """,
-                        params,
-                    )
-                    cid = add_citation(
-                        "cypher",
-                        "Country with highest betweenness",
-                        "Neo4j SHADOW_HUB relationship",
-                        f"year={year}, rows={len(rows)}",
-                    )
-                    cypher_evidence.append(
-                        {"citation_id": cid, "type": "highest_betweenness", "rows": rows}
-                    )
-
-                elif intent == "top_shadow_hubs_all_years":
-                    rows = self.neo4j.run_read(
-                        """
-                        MATCH (c:Country)-[s:SHADOW_HUB]->(y:Year)
-                        RETURN c.iso3 AS iso3,
-                               c.name AS name,
-                               y.year AS year,
-                               s.shadow_resid AS shadow_resid,
-                               s.shadow_rank AS shadow_rank,
-                               s.betweenness AS betweenness,
-                               s.trade_total_usd AS trade_total_usd
-                        ORDER BY s.shadow_resid DESC
-                        LIMIT 1
-                        """
-                    )
-                    cid = add_citation(
-                        "cypher",
-                        "Top shadow hub across all years",
-                        "Neo4j SHADOW_HUB relationship",
-                        f"all years, rows={len(rows)}",
-                    )
-                    cypher_evidence.append(
-                        {"citation_id": cid, "type": "top_shadow_hubs_all_years", "rows": rows}
-                    )
-
-                elif intent == "sanctioned_shadow_trend":
-                    rows = self.neo4j.run_read(
-                        """
-                        MATCH (c:Country)-[s:SHADOW_HUB]->(y:Year)
-                        WHERE coalesce(c.ofac_entities, 0) > 0
-                        RETURN c.iso3 AS iso3,
-                               c.name AS name,
-                               y.year AS year,
-                               s.shadow_resid AS shadow_resid,
-                               s.shadow_rank AS shadow_rank,
-                               s.betweenness AS betweenness,
-                               coalesce(c.ofac_entities, 0) AS ofac_entities
-                        ORDER BY c.name, y.year
-                        """
-                    )
-                    by_country = {}
-                    for row in rows:
-                        by_country.setdefault(row["iso3"], []).append(row)
-                    ranked = []
-                    for iso3_key, series in by_country.items():
-                        series = sorted(series, key=lambda r: r["year"])
-                        if len(series) < 2:
-                            continue
-                        first = series[0]
-                        last = series[-1]
-                        growth = float(last["shadow_resid"]) - float(first["shadow_resid"])
-                        if growth > 0:
-                            ranked.append({
-                                "iso3": iso3_key,
-                                "name": last["name"],
-                                "ofac_entities": last["ofac_entities"],
-                                "start_year": first["year"],
-                                "end_year": last["year"],
-                                "start_shadow_resid": first["shadow_resid"],
-                                "end_shadow_resid": last["shadow_resid"],
-                                "growth": growth,
-                                "latest_shadow_rank": last["shadow_rank"],
-                                "latest_betweenness": last["betweenness"],
-                            })
-                    ranked = sorted(ranked, key=lambda r: r["growth"], reverse=True)[:top_n]
-                    cid = add_citation(
-                        "cypher",
-                        "OFAC-exposed shadow hubs with increasing residuals",
-                        "Neo4j SHADOW_HUB relationship with OFAC overlay",
-                        f"top_n={len(ranked)}",
-                    )
-                    cypher_evidence.append(
-                        {"citation_id": cid, "type": "sanctioned_shadow_trend", "rows": ranked}
-                    )
-
                 else:
                     if plan.get("country_iso3"):
                         iso3 = plan["country_iso3"]
@@ -777,9 +638,19 @@ Question: {question}
             if plan.get("needs_clarification"):
                 return {"draft_answer": ""}
             prompt = f"""
-You are an AI assistant for the Shadow Hubs in Global Oil Trade visualization tool.
-You answer risk-screening questions about oil-trade network structure, AND general questions
-about this tool, its methodology, and how it was built.
+You are an AI assistant for the Shadow Hubs in Global Oil Trade visualization — an interactive 3D globe
+that maps bilateral crude and refined petroleum trade flows (UN Comtrade HS 2709/2710) from 2019 to 2024,
+overlaid with OFAC sanctions exposure and network-derived "shadow hub" scores.
+
+The app uses GraphRAG: a graph-based Retrieval-Augmented Generation system that queries a Neo4j knowledge
+graph of trade relationships, then uses the retrieved evidence to ground LLM answers. Citations marked
+[C1], [C2] etc. come from direct Cypher queries against the graph database; [V1], [V2] etc. come from
+vector-similarity search over pre-embedded trade summaries.
+
+You have access to evidence retrieved from the graph database below. Use it to ground your answer when
+relevant. For questions about the data (countries, trade flows, shadow hubs, sanctions), rely primarily
+on the evidence and cite it with [C1]/[V2] markers. For general questions about the tool, methodology,
+or concepts, answer naturally from your knowledge — you don't need graph evidence for those.
 
 Question:
 {state.get('refined_question') or state['question']}
@@ -787,127 +658,15 @@ Question:
 Extracted plan:
 {json.dumps(plan, ensure_ascii=True)}
 
-Evidence context:
+Evidence context (from Neo4j graph database):
 {state['context_text']}
 
-=== RULES FOR DATA QUESTIONS ===
-
-Evidence and Citations
-- Use only the evidence provided in the context.
-- Include inline citations such as [C1] or [V2] next to factual claims.
-- Prefer Cypher evidence [C#] over vector evidence [V#] when exact graph metrics, rankings, or values are available.
-- If Cypher evidence [C#] provides the metric used for interpretation, cite only the Cypher evidence for that metric and do not cite vector hits [V#] for the same value.
-- When reporting shadow residual, shadow rank, or betweenness, cite only the Cypher evidence [C#].
-- For sanctions-related questions, explain that OFAC exposure is an overlay indicator and not the same as shadow hub status.
-- For sanctioned shadow hub trend questions, report only countries and trend values explicitly present in the evidence; do not infer or invent country-year values.
-- For sanctions-related trend questions, distinguish between "increasing shadow residual over time" and "currently behaving like a strong shadow hub".
-- Do not describe countries with low or negative shadow residuals as clear shadow hubs; instead say they show increasing shadow-hub-like behavior or increasing structural centrality.
-- If the latest residual is negative, explicitly note that the country is becoming more central over time but does not currently appear as a strong shadow hub.
-
-Answer Style
-- Keep the answer concise, analytical, and precise.
-- Avoid speculation and overclaiming; base conclusions strictly on the available evidence.
-- If evidence is incomplete, mixed, or uncertain, explicitly state that uncertainty.
-
-Shadow Hub Concept
-- A shadow hub refers to a country whose intermediary importance in the oil-trade network is unusually high relative to its trade volume.
-- A shadow hub score reflects structural centrality in the network, not illegality or sanctions evasion.
-- Do not imply wrongdoing unless the evidence explicitly supports it.
-
-Explaining Shadow Hub Behavior
-When asked whether a country behaves like a shadow hub:
-1. Briefly define what a shadow hub means in this project.
-2. Report the relevant metrics (e.g., shadow residual, shadow rank, betweenness).
-3. Provide a careful interpretation of what those metrics suggest about the country's intermediary role.
-
-Interpretation Language
-- Do NOT state that a country "is", "functions as", "operates as", or "is classified as" a shadow hub.
-- Instead use wording such as:
-  "behaves like a shadow hub in the structural sense used in this project"
-  "appears as a shadow hub based on the metrics"
-  "the metrics suggest intermediary hub behavior".
-- Avoid strong or categorical wording such as "confirms", "proves", "reinforces the status", or "classifies".
-- Avoid strong causal language such as "facilitating transactions". Instead describe metrics as "suggesting", "indicating", or being "consistent with" an intermediary role.
-
-Network Metrics Interpretation
-- Do not interpret degree as trade volume.
-- If referencing in-degree or out-degree, describe them as counts of trade relationships, not trade amounts.
-
-Sanctions / OFAC Context
-- If the question involves sanctions or OFAC data, explain that OFAC is an overlay indicator of sanctions exposure.
-- Do not treat OFAC exposure and shadow hub status as the same concept.
-
-Trend and Time-Based Questions
-- For trend questions, summarize year-by-year shadow residual changes when evidence is available.
-- If the trend is unclear, mixed, or unsupported, state that explicitly.
-
-Cross-Year Questions
-- If the question asks for the greatest, highest, or top value across all years, report both the country and the year of the maximum value.
-- Do not answer "across all years" using a single-year result unless the evidence explicitly covers all years.
-- If a question is ambiguous (for example, "top across all years"), briefly clarify possible interpretations before answering.
-
-=== RULES FOR GENERAL/META QUESTIONS ===
-
-For questions about the tool itself, methodology, tech stack, or concepts (e.g. "what is GraphRAG?",
-"how was this built?", "what is a shadow hub?"), use the PROJECT REFERENCE below. You do NOT need
-graph evidence for these — answer helpfully from the reference.
-
-=== PROJECT REFERENCE ===
-
-WHAT THIS TOOL IS:
-An interactive 3D globe (Globe.gl) that maps bilateral crude and refined petroleum trade flows
-(UN Comtrade HS 2709 crude, HS 2710 refined) from 2019 to 2024, overlaid with OFAC sanctions
-exposure and network-derived "shadow hub" scores. Users can click countries to see trade arcs,
-toggle between OFAC and clustering color modes, and adjust the percentage of edges shown.
-
-WHAT IS A SHADOW HUB:
-A shadow hub is a country that is unusually central in the oil trade network relative to its actual
-trade volume. We measure this using betweenness centrality residuals. Betweenness centrality counts
-how many shortest paths between all pairs of countries pass through a given country. We regress
-betweenness centrality against log trade volume using OLS, and the residual is the "shadow hub score."
-A positive residual means the country sits on more shortest paths than its trade volume would predict —
-it is structurally anomalous as an intermediary. A high shadow residual does NOT prove illicit activity.
-Legitimate factors (geography, refining capacity, free trade zones) can produce elevated centrality.
-
-ISOLATING TRUE SHADOW HUBS:
-To move beyond pure mathematical anomaly, we cross-reference shadow hub scores with OFAC sanctions
-exposure (count of sanctioned entities per country). The intersection of high betweenness residual
-AND high sanctions exposure pinpoints countries that are both structurally anomalous and connected
-to sanctioned activity — the most likely candidates for sanctions evasion intermediation.
-
-CLUSTERING ANALYSIS — HOW SHADOW HUBS BROKER:
-Shadow hub detection tells us WHICH countries are anomalous intermediaries but not HOW they operate.
-The weighted clustering coefficient answers this. For each country i, it measures the fraction of
-triangles among its trade partners, weighted by trade volume. We compute this via
-nx.clustering(G, weight='log_weight') on the directed trade graph for each year.
-Low clustering = sole bridge between disconnected groups (exclusive broker).
-High clustering = partners form a dense clique (laundering syndicate).
-
-THREE BEHAVIORAL PATTERNS:
-- Exclusive Broker (CC < 0.20): Sole bridge between disconnected trading blocs.
-- Mixed/Moderate (CC 0.20-0.40): Some partner interconnection but still structurally important.
-- Laundering Syndicate (CC > 0.40): Partners trade heavily with each other forming a dense sub-network.
-
-WHAT IS GraphRAG:
-GraphRAG = Graph-based Retrieval-Augmented Generation. The AI queries a Neo4j graph database
-containing the actual trade network, retrieves evidence, then grounds its response in real data.
-Citations: [C1]/[C2] = Cypher query results; [V1]/[V2] = vector similarity search results.
-
-GRAPH DATABASE SCHEMA (Neo4j):
-- (:Country) nodes: iso3, name, iso2, ofac_entities, ofac_links
-- (:Year) nodes: year (2019-2024)
-- (:Country)-[:TRADE {{year, trade_value_usd}}]->(:Country) — exporter -> importer
-- (:Country)-[:SHADOW_HUB {{shadow_resid, shadow_rank, betweenness, trade_total_usd, in_deg, out_deg}}]->(:Year)
-
-TECH STACK:
-Frontend: Globe.gl, Chart.js, vanilla HTML/CSS/JS. Backend: FastAPI.
-AI/ML: LangGraph, GPT-4o-mini, OpenAI embeddings. Database: Neo4j AuraDB.
-Hosting: Render + UptimeRobot. Analysis: NetworkX (Python).
-
-DATA SOURCES:
-UN Comtrade (HS 2709/2710, 2019-2024), OFAC SDN List, UN/LOCODE, World Port Index.
-
-=== END PROJECT REFERENCE ===
+Rules:
+- When graph evidence is relevant, cite it inline like [C1] or [V2].
+- When answering general/meta questions (e.g. "what is this tool?", "what is GraphRAG?"), answer
+  helpfully from general knowledge — do not say you lack evidence.
+- Keep answers concise and analytical.
+- A high shadow residual suggests anomalous intermediary structure, not proof of illicit activity.
 """
             answer = self.answer_llm.invoke(prompt).content
             return {"draft_answer": answer}

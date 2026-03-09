@@ -831,10 +831,10 @@
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-starters" id="chatStarters">
             <div class="starter-chip" data-question="Top shadow hubs 2024">Top shadow hubs 2024</div>
-            <div class="starter-chip" data-question="How has Spain changed since 2022?">How has Spain changed since 2022?</div>
-            <div class="starter-chip" data-question="Compare Singapore and Georgia">Compare Singapore and Georgia</div>
-            <div class="starter-chip" data-question="Which sanctioned countries are shadow hubs?">Which sanctioned countries are shadow hubs?</div>
-            <div class="starter-chip" data-question="How does Singapore move oil?">How does Singapore move oil?</div>
+            <div class="starter-chip" data-question="Which country has the highest shadow residual across all years?">Highest shadow residual across all years</div>
+            <div class="starter-chip" data-question="Top sanctioned countries with increasing shadow hub activity">Sanctioned countries with rising activity</div>
+            <div class="starter-chip" data-question="Which country has the highest betweenness in 2024?">Highest betweenness in 2024</div>
+            <div class="starter-chip" data-question="What is a shadow hub and how is it calculated?">What is a shadow hub?</div>
         </div>
         <div class="chat-input-area">
             <textarea class="chat-input" id="chatInput" placeholder="Ask about shadow hubs..." rows="1"></textarea>
@@ -1570,7 +1570,16 @@
                         <li><strong>[C1], [C2], …</strong> — <em>Cypher citations.</em> Data retrieved by direct graph database queries (e.g. "top 5 shadow hubs in 2024", "Singapore's export partners"). These are exact results from the Neo4j knowledge graph.</li>
                         <li><strong>[V1], [V2], …</strong> — <em>Vector citations.</em> Data retrieved by semantic similarity search over pre-embedded trade summaries. The AI finds the most relevant text snippets that match your question.</li>
                     </ul>
-                    <p>For general questions about the tool or methodology, the AI answers from its own knowledge without needing graph evidence. A full citation list appears at the bottom of each response.</p>
+                    <p><strong>What you can ask:</strong></p>
+                    <ul>
+                        <li>Single-year rankings: "Top shadow hubs in 2024"</li>
+                        <li>Cross-year queries: "Which country has the highest shadow residual across all years?"</li>
+                        <li>Sanctions trends: "Top sanctioned countries with increasing shadow hub activity"</li>
+                        <li>Network metrics: "Which country has the highest betweenness in 2024?"</li>
+                        <li>Country deep-dives: "Tell me about Singapore as a shadow hub"</li>
+                        <li>General questions: "What is GraphRAG?", "How was this tool built?"</li>
+                    </ul>
+                    <p>For general questions about the tool or methodology, the AI answers from its built-in project reference without needing graph evidence. A full citation list appears at the bottom of each response.</p>
                 </div>
             </div>
         </div>
