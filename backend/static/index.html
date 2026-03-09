@@ -98,6 +98,17 @@
             margin-top: 10px;
         }
 
+        .stats-section-label {
+            color: #64b5f6;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+        }
+
         .stats-row {
             display: flex;
             justify-content: space-between;
@@ -742,21 +753,37 @@
             <input type="range" id="edgeSlider" min="5" max="100" step="5" value="25" style="width:100%; cursor:pointer; accent-color:#64b5f6;">
         </div>
         <div class="stats">
+            <div class="stats-section-label">Global (<span id="statsYear">2024</span>)</div>
             <div class="stats-row">
                 <span class="stats-label">Economies</span>
                 <span class="stats-value" id="countryCount">—</span>
             </div>
             <div class="stats-row">
-                <span class="stats-label">Flows</span>
+                <span class="stats-label">Trade Flows</span>
                 <span class="stats-value" id="flowCount">—</span>
             </div>
             <div class="stats-row">
-                <span class="stats-label">Volume</span>
+                <span class="stats-label">Total Volume</span>
                 <span class="stats-value" id="volumeTotal">—</span>
             </div>
+        </div>
+        <div class="stats" id="selectedStats" style="display:none; margin-top:6px;">
+            <div class="stats-section-label" id="selectedLabel">Selected Country</div>
             <div class="stats-row">
-                <span class="stats-label">Top Flow</span>
-                <span class="stats-value" id="topFlow">—</span>
+                <span class="stats-label">Trade Partners</span>
+                <span class="stats-value" id="selPartners">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Trade Volume</span>
+                <span class="stats-value" id="selVolume">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Top Partner</span>
+                <span class="stats-value" id="selTopPartner">—</span>
+            </div>
+            <div class="stats-row">
+                <span class="stats-label">Arcs Shown</span>
+                <span class="stats-value" id="selArcsShown">—</span>
             </div>
         </div>
     </div>
@@ -1144,7 +1171,7 @@
                     globe.arcsData([]);
                     selectedCountry = null;
                     document.getElementById('clearArcsBtn').style.display = 'none';
-                    document.getElementById('topFlow').textContent = 'Click a country';
+                    document.getElementById('selectedStats').style.display = 'none';
                 });
 
                 // Build filtered arcs for a country based on edge slider
@@ -1179,12 +1206,32 @@
                     globe.arcsData(arcsArray);
                     document.getElementById('clearArcsBtn').style.display = arcsArray.length > 0 ? 'flex' : 'none';
 
-                    // Update stats
-                    document.getElementById('flowCount').textContent = visible.length + ' / ' + countryFlows.length;
-                    const vol = visible.reduce((s, f) => s + f.trade_value_usd, 0);
-                    document.getElementById('volumeTotal').textContent =
-                        vol > 1e12 ? '$' + (vol / 1e12).toFixed(2) + 'T' : '$' + (vol / 1e9).toFixed(1) + 'B';
-                    document.getElementById('topFlow').textContent = (point.name || point.iso3) + ': ' + visible.length + ' flows';
+                    // Selected country stats (total, NOT slider-filtered)
+                    const totalVol = countryFlows.reduce((s, f) => s + f.trade_value_usd, 0);
+                    // Find unique trade partners
+                    const partners = new Set();
+                    countryFlows.forEach(f => {
+                        if (f.exporter_iso3 !== point.iso3) partners.add(f.exporter_iso3);
+                        if (f.importer_iso3 !== point.iso3) partners.add(f.importer_iso3);
+                    });
+                    // Find top partner by total trade value
+                    const partnerTotals = {};
+                    countryFlows.forEach(f => {
+                        const partner = f.exporter_iso3 === point.iso3 ? f.importer_iso3 : f.exporter_iso3;
+                        partnerTotals[partner] = (partnerTotals[partner] || 0) + f.trade_value_usd;
+                    });
+                    const topPartnerIso = Object.entries(partnerTotals).sort((a, b) => b[1] - a[1])[0];
+                    const topPartnerName = topPartnerIso ? (countriesData[topPartnerIso[0]]?.name || topPartnerIso[0]) : '—';
+                    const topPartnerVal = topPartnerIso ? topPartnerIso[1] : 0;
+
+                    document.getElementById('selectedLabel').textContent = point.name || point.iso3;
+                    document.getElementById('selPartners').textContent = partners.size;
+                    document.getElementById('selVolume').textContent =
+                        totalVol > 1e12 ? '$' + (totalVol / 1e12).toFixed(2) + 'T' : '$' + (totalVol / 1e9).toFixed(1) + 'B';
+                    document.getElementById('selTopPartner').textContent = topPartnerName +
+                        ' ($' + (topPartnerVal > 1e9 ? (topPartnerVal / 1e9).toFixed(1) + 'B' : (topPartnerVal / 1e6).toFixed(0) + 'M') + ')';
+                    document.getElementById('selArcsShown').textContent = visible.length + ' / ' + countryFlows.length;
+                    document.getElementById('selectedStats').style.display = 'block';
                 }
 
                 // Edge slider — live update when a country is selected
@@ -1269,13 +1316,15 @@
                 globe.arcsData([]);
                 selectedCountry = null;
 
-                // Stats
+                // Global stats
                 const totalVolume = flows.reduce((sum, f) => sum + f.trade_value_usd, 0);
-                document.getElementById('flowCount').textContent = flows.length;
+                document.getElementById('statsYear').textContent = year;
+                document.getElementById('flowCount').textContent = flows.length.toLocaleString();
                 document.getElementById('volumeTotal').textContent =
                     totalVolume > 1e12 ? '$' + (totalVolume / 1e12).toFixed(2) + 'T' : '$' + (totalVolume / 1e9).toFixed(1) + 'B';
                 document.getElementById('countryCount').textContent = pointsArray.length;
-                document.getElementById('topFlow').textContent = 'Click a country';
+                // Hide selected country stats when year changes
+                document.getElementById('selectedStats').style.display = 'none';
 
                 // Update leaderboard
                 updateLeaderboard(year);
