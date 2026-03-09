@@ -175,11 +175,19 @@
                     <div class="legend-dot" style="background:#ff6b6b;"></div>
                     <span><strong>Laundering Syndicate</strong> (clustering &gt; 0.40)</span>
                 </div>
-                <p style="font-size:11px; color:#a0b0cc; margin-top:10px; line-height:1.5;">
-                    Weighted clustering coefficients measure how densely a country's trade partners are
-                    connected to each other. Low clustering suggests an exclusive intermediary; high
-                    clustering suggests a coordinated network.
-                </p>
+                <div style="font-size:11px; color:#a0b0cc; margin-top:12px; line-height:1.6;">
+                    <p style="margin-bottom:8px;"><strong style="color:#c0d0e8;">What is this chart?</strong> Each bubble is a country in the global oil trade network for the selected year. The x-axis shows the <em>shadow hub score</em> (betweenness centrality residual) — how structurally central a country is as a trade intermediary beyond what its trade volume would predict. The y-axis (log scale) shows OFAC sanctioned entity count. Bubble size reflects total trade volume. Color indicates the clustering pattern.</p>
+
+                    <p style="margin-bottom:8px;"><strong style="color:#c0d0e8;">Weighted clustering coefficient:</strong> For each country <em>i</em>, this measures the fraction of triangles among its trade partners, weighted by trade value. Formally, if <em>i</em> trades with <em>j</em> and <em>k</em>, a weighted triangle exists when <em>j</em> also trades with <em>k</em>. Computed via <code style="color:#64b5f6;">nx.clustering(G, weight='log_weight')</code> on the directed trade graph per year.</p>
+
+                    <p style="margin-bottom:8px;"><strong style="color:#c0d0e8;">Why it matters:</strong> Shadow hub detection identifies <em>which</em> countries are anomalous intermediaries, but not <em>how</em> they broker oil. The clustering coefficient reveals the brokerage structure:</p>
+                    <ul style="margin: 6px 0 8px 16px; list-style: disc;">
+                        <li><strong>Low CC:</strong> Partners don't trade with each other — the hub is a sole bridge between disconnected groups (exclusive broker).</li>
+                        <li><strong>High CC:</strong> Partners form a dense clique — oil circulates within a tight, possibly coordinated ring (laundering syndicate).</li>
+                    </ul>
+
+                    <p style="margin-bottom:0;"><strong style="color:#c0d0e8;">Filter:</strong> Only countries with OFAC entities &gt; 5 and positive shadow residual appear in the ranked table, ensuring focus on sanctioned-exposure intermediaries.</p>
+                </div>
             </div>
 
             <h3>Top Shadow Hubs (<span id="tableYear">2024</span>)</h3>

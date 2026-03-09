@@ -24,15 +24,27 @@
             position: relative;
         }
 
-        .controls {
+        .left-panel {
             position: absolute;
             top: 20px;
             left: 20px;
+            z-index: 100;
+            min-width: 300px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .left-panel::-webkit-scrollbar { width: 4px; }
+        .left-panel::-webkit-scrollbar-thumb { background: rgba(100,150,255,0.3); border-radius: 2px; }
+
+        .controls {
             background: rgba(20, 28, 50, 0.95);
             border: 1px solid rgba(100, 150, 255, 0.3);
             border-radius: 8px;
             padding: 20px;
-            z-index: 100;
             min-width: 300px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
@@ -284,16 +296,12 @@
         }
 
         .leaderboard {
-            position: absolute;
-            top: 260px;
-            left: 20px;
             background: rgba(20, 28, 50, 0.95);
             border: 1px solid rgba(100, 150, 255, 0.3);
             border-radius: 8px;
             padding: 16px;
-            z-index: 100;
             min-width: 300px;
-            max-height: calc(100vh - 300px);
+            max-height: calc(100vh - 400px);
             overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
@@ -718,6 +726,7 @@
 <body>
     <div id="globeContainer"></div>
 
+    <div class="left-panel">
     <div class="controls">
         <h2>CONTROLS</h2>
         <div class="control-group">
@@ -755,8 +764,9 @@
         </div>
     </div>
 
-    <div class="legend">
+    <div class="legend" id="legendPanel">
         <h3>LEGEND</h3>
+        <div id="legendItems">
         <div class="legend-item">
             <div class="legend-color" style="background:#ff6b6b;"></div>
             <span>High OFAC (>500)</span>
@@ -771,6 +781,7 @@
         </div>
         <div class="legend-item">
             <span>Dot size = Shadow hub rank</span>
+        </div>
         </div>
     </div>
 
@@ -793,6 +804,7 @@
             </tbody>
         </table>
     </div>
+    </div><!-- end left-panel -->
 
     <!-- Bottom Buttons -->
     <div class="bottom-buttons">
@@ -1237,11 +1249,26 @@
                         d.trade_total = 0;
                     }
 
-                    // Color by OFAC
-                    const ofac = d.ofac_entities || 0;
-                    if (ofac > 500) d.color = '#ff6b6b';
-                    else if (ofac > 100) d.color = '#ff9f43';
-                    else d.color = '#42a5f5';
+                    // Color by mode
+                    if (leaderboardMode === 'cluster') {
+                        // Cluster color mode
+                        const clusterKey = year + '_' + d.iso3;
+                        const clusterEntry = clusteringData.find(cd => cd.year === year && cd.iso3 === d.iso3);
+                        if (clusterEntry && clusterEntry.shadow_resid > 0 && clusterEntry.ofac_entities > 5) {
+                            const cc = clusterEntry.clustering;
+                            if (cc < 0.20) d.color = '#42a5f5'; // Broker - blue
+                            else if (cc > 0.40) d.color = '#ff6b6b'; // Syndicate - red
+                            else d.color = '#ff9f43'; // Mixed - orange
+                        } else {
+                            d.color = '#555577'; // Non-clustered countries: muted
+                        }
+                    } else {
+                        // OFAC color mode
+                        const ofac = d.ofac_entities || 0;
+                        if (ofac > 500) d.color = '#ff6b6b';
+                        else if (ofac > 100) d.color = '#ff9f43';
+                        else d.color = '#42a5f5';
+                    }
 
                     // Radius by shadow hub rank
                     const rank = d.shadow_rank || 999;
@@ -1279,7 +1306,26 @@
             document.getElementById('lbModeCluster').classList.toggle('active', mode === 'cluster');
             document.getElementById('lbModeRaw').classList.toggle('active', mode === 'raw');
             document.getElementById('lbFourthHeader').textContent = mode === 'cluster' ? 'Cluster' : 'OFAC';
-            updateLeaderboard(currentYear);
+            updateLegend(mode);
+            updateVisualization(currentYear);
+        }
+
+        function updateLegend(mode) {
+            const el = document.getElementById('legendItems');
+            if (mode === 'cluster') {
+                el.innerHTML =
+                    '<div class="legend-item"><div class="legend-color" style="background:#42a5f5;"></div><span>Exclusive Broker (CC &lt; 0.20)</span></div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#ff9f43;"></div><span>Mixed (CC 0.20–0.40)</span></div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#ff6b6b;"></div><span>Laundering Syndicate (CC &gt; 0.40)</span></div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#555577;"></div><span>Non-hub / Below threshold</span></div>' +
+                    '<div class="legend-item"><span>Dot size = Shadow hub rank</span></div>';
+            } else {
+                el.innerHTML =
+                    '<div class="legend-item"><div class="legend-color" style="background:#ff6b6b;"></div><span>High OFAC (&gt;500)</span></div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#ff9f43;"></div><span>Medium OFAC (100-500)</span></div>' +
+                    '<div class="legend-item"><div class="legend-color" style="background:#42a5f5;"></div><span>Low/No OFAC</span></div>' +
+                    '<div class="legend-item"><span>Dot size = Shadow hub rank</span></div>';
+            }
         }
 
         function getClusterPattern(clustering) {
@@ -1445,13 +1491,16 @@
             </div>
             <div class="accordion-body">
                 <div class="accordion-content">
-                    <p>Weighted clustering coefficients classify shadow hubs into behavioral patterns:</p>
+                    <p><strong>Why clustering coefficients?</strong> Shadow hub detection (via betweenness centrality residuals) tells us <em>which</em> countries are anomalous intermediaries — but not <em>how</em> they broker oil. The weighted clustering coefficient answers this by measuring whether a country's trade partners also trade with each other.</p>
+                    <p><strong>The math:</strong> For each country <em>i</em>, the weighted clustering coefficient <em>C<sub>w</sub>(i)</em> is the fraction of triangles formed among its neighbors, weighted by trade volume. We compute this via <code>nx.clustering(G, weight='log_weight')</code> on the directed trade graph for each year. A triangle exists when country <em>i</em> trades with both <em>j</em> and <em>k</em>, and <em>j</em> also trades with <em>k</em>.</p>
+                    <p><strong>Intuition:</strong> Low clustering means a country's partners do <em>not</em> trade with each other — the country is a lone bridge between disconnected groups. High clustering means its partners form a dense clique — oil circulates within a tight network.</p>
+                    <p><strong>Three behavioral patterns emerge:</strong></p>
                     <ul>
-                        <li><strong>Exclusive Broker</strong> (clustering &lt; 0.20): Pure intermediary with minimal internal connections (e.g. Singapore 0.18, Turkey 0.19)</li>
-                        <li><strong>Mixed/Moderate</strong> (0.20-0.40): Some internal clustering (e.g. Spain 0.24, Kenya 0.31)</li>
-                        <li><strong>Laundering Syndicate</strong> (clustering &gt; 0.40): Dense internal network suggesting coordinated activity (e.g. Georgia 0.45, Uzbekistan 0.42)</li>
+                        <li><strong>Exclusive Broker</strong> (CC &lt; 0.20): Acts as a sole bridge between disconnected trading blocs. Partners rarely trade directly — all flows route through this hub. Example: Singapore (0.18), Turkey (0.19). Consistent with legitimate transshipment hubs or potential sanctions evasion chokepoints.</li>
+                        <li><strong>Mixed/Moderate</strong> (CC 0.20–0.40): Some partner interconnection but still structurally important as an intermediary. Example: Spain (0.24), Kenya (0.31). May serve regional brokerage roles with partial direct partner trade.</li>
+                        <li><strong>Laundering Syndicate</strong> (CC &gt; 0.40): Partners trade heavily with each other, forming a dense sub-network. Oil circulates within a tight cluster rather than passing through a single chokepoint. Example: Georgia (0.45), Uzbekistan (0.42). Consistent with coordinated trade rings or regional blocs.</li>
                     </ul>
-                    <p>High clustering + high shadow residual = strongest signal for organized illicit intermediation.</p>
+                    <p><strong>Key insight:</strong> High clustering + high shadow residual = strongest signal for organized illicit intermediation. A country that is both structurally anomalous (high betweenness residual) <em>and</em> embedded in a dense trade clique (high clustering) warrants the closest scrutiny.</p>
                     <p style="margin-top:8px;"><a href="/static/clustering.html" style="color:#64b5f6; text-decoration:underline;">View full clustering visualization &rarr;</a></p>
                 </div>
             </div>
