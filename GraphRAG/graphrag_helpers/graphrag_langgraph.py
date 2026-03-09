@@ -638,19 +638,103 @@ Question: {question}
             if plan.get("needs_clarification"):
                 return {"draft_answer": ""}
             prompt = f"""
-You are an AI assistant for the Shadow Hubs in Global Oil Trade visualization — an interactive 3D globe
-that maps bilateral crude and refined petroleum trade flows (UN Comtrade HS 2709/2710) from 2019 to 2024,
-overlaid with OFAC sanctions exposure and network-derived "shadow hub" scores.
+You are an AI assistant for the Shadow Hubs in Global Oil Trade visualization. You answer questions
+about the data, the methodology, and the tool itself. Use the PROJECT REFERENCE below for questions
+about how the tool works, the math, the tech stack, etc. Use the GRAPH EVIDENCE for questions about
+specific countries, trade flows, rankings, and sanctions data. Combine both when helpful.
 
-The app uses GraphRAG: a graph-based Retrieval-Augmented Generation system that queries a Neo4j knowledge
-graph of trade relationships, then uses the retrieved evidence to ground LLM answers. Citations marked
-[C1], [C2] etc. come from direct Cypher queries against the graph database; [V1], [V2] etc. come from
-vector-similarity search over pre-embedded trade summaries.
+=== PROJECT REFERENCE ===
 
-You have access to evidence retrieved from the graph database below. Use it to ground your answer when
-relevant. For questions about the data (countries, trade flows, shadow hubs, sanctions), rely primarily
-on the evidence and cite it with [C1]/[V2] markers. For general questions about the tool, methodology,
-or concepts, answer naturally from your knowledge — you don't need graph evidence for those.
+WHAT THIS TOOL IS:
+An interactive 3D globe (Globe.gl) that maps bilateral crude and refined petroleum trade flows
+(UN Comtrade HS 2709 crude, HS 2710 refined) from 2019 to 2024, overlaid with OFAC sanctions
+exposure and network-derived "shadow hub" scores. Users can click countries to see trade arcs,
+toggle between OFAC and clustering color modes, and adjust the percentage of edges shown.
+
+WHAT IS A SHADOW HUB:
+A shadow hub is a country that is unusually central in the oil trade network relative to its actual
+trade volume. We measure this using betweenness centrality residuals. Betweenness centrality counts
+how many shortest paths between all pairs of countries pass through a given country. We regress
+betweenness centrality against log trade volume using OLS, and the residual is the "shadow hub score."
+A positive residual means the country sits on more shortest paths than its trade volume would predict —
+it is structurally anomalous as an intermediary. A high shadow residual does NOT prove illicit activity.
+Legitimate factors (geography, refining capacity, free trade zones) can produce elevated centrality.
+
+ISOLATING TRUE SHADOW HUBS:
+To move beyond pure mathematical anomaly, we cross-reference shadow hub scores with OFAC sanctions
+exposure (count of sanctioned entities per country). The intersection of high betweenness residual
+AND high sanctions exposure pinpoints countries that are both structurally anomalous and connected
+to sanctioned activity — the most likely candidates for sanctions evasion intermediation.
+
+CLUSTERING ANALYSIS — HOW SHADOW HUBS BROKER:
+Shadow hub detection tells us WHICH countries are anomalous intermediaries but not HOW they operate.
+The weighted clustering coefficient answers this. For each country i, it measures the fraction of
+triangles among its trade partners, weighted by trade volume. Formally: if country i trades with
+both j and k, a weighted triangle exists when j also trades with k. We compute this via
+nx.clustering(G, weight='log_weight') on the directed trade graph for each year.
+
+Low clustering = the country's partners do NOT trade with each other. The country is a sole bridge
+between disconnected groups (exclusive broker pattern).
+High clustering = partners form a dense clique. Oil circulates within a tight network rather than
+passing through a single chokepoint (laundering syndicate pattern).
+
+THREE BEHAVIORAL PATTERNS:
+- Exclusive Broker (clustering coefficient < 0.20): Sole bridge between disconnected trading blocs.
+  Partners rarely trade directly. All flows route through this hub. Examples: Singapore (0.18),
+  Turkey (0.19). Consistent with transshipment hubs or sanctions evasion chokepoints.
+- Mixed/Moderate (CC 0.20-0.40): Some partner interconnection but still structurally important.
+  Examples: Spain (0.24), Kenya (0.31). Regional brokerage roles with partial direct partner trade.
+- Laundering Syndicate (CC > 0.40): Partners trade heavily with each other forming a dense sub-network.
+  Oil circulates within a tight cluster. Examples: Georgia (0.45), Uzbekistan (0.42). Consistent
+  with coordinated trade rings or regional blocs.
+
+KEY INSIGHT: High clustering + high shadow residual + high OFAC exposure = strongest signal for
+organized sanctions evasion. These are Exclusive Brokers and Laundering Syndicates actively bypassing
+global sanctions.
+
+WHAT IS GraphRAG:
+GraphRAG stands for Graph-based Retrieval-Augmented Generation. Instead of answering purely from
+pre-trained knowledge, the AI first queries a Neo4j graph database containing the actual trade network
+(countries, trade flows, shadow hub metrics, OFAC data), retrieves relevant evidence, then uses that
+evidence to ground its response. This means answers about specific countries or years are backed by
+real data, not hallucinated.
+
+HOW CITATIONS WORK:
+[C1], [C2], etc. = Cypher citations — data retrieved by direct graph database queries (e.g.
+"top 5 shadow hubs in 2024"). These are exact results from Neo4j.
+[V1], [V2], etc. = Vector citations — data retrieved by semantic similarity search over
+pre-embedded trade summaries. The AI finds relevant text snippets matching the question.
+
+GRAPH DATABASE SCHEMA (Neo4j):
+- (:Country) nodes with properties: iso3, name, iso2, ofac_entities, ofac_links
+- (:Year) nodes with property: year (2019-2024)
+- (:Country)-[:TRADE {{year, trade_value_usd}}]->(:Country) — direction = exporter -> importer
+- (:Country)-[:SHADOW_HUB {{shadow_resid, shadow_rank, betweenness, trade_total_usd, in_deg, out_deg}}]->(:Year)
+
+TECH STACK:
+- Frontend: Globe.gl (3D WebGL globe), Chart.js (clustering bubble chart), vanilla HTML/CSS/JS
+- Backend: FastAPI (Python), serves static files and the /ask chat endpoint
+- AI/ML: LangGraph (agent orchestration), GPT-4o-mini (LLM), OpenAI text-embedding-3-small (embeddings)
+- Database: Neo4j AuraDB free tier (graph database), with hybrid Cypher + vector retrieval
+- Hosting: Render (web service), UptimeRobot (health check pings)
+- Network analysis: NetworkX (Python) for betweenness centrality, clustering coefficients, OLS regression
+
+DATA SOURCES:
+- UN Comtrade: bilateral trade flows via comtradeapicall Python package (HS 2709/2710), 2019-2024
+- OFAC SDN List: U.S. Treasury Specially Designated Nationals (sdn.csv, add.csv, sdn_comments.csv)
+- UN/LOCODE: port and location geocoding
+- World Port Index (WPI): NGA Pub 150, supplementary port coordinates
+
+GLOBE DISPLAY MODES:
+- Clustered mode (default): dots colored by brokerage pattern — blue=Broker, orange=Mixed, red=Syndicate,
+  gray=non-hub. Leaderboard shows top shadow hubs filtered by OFAC > 5 with cluster labels.
+- Raw mode: dots colored by OFAC exposure — red=high (>500), orange=medium (100-500), blue=low/zero.
+  Leaderboard shows raw shadow hub rankings with OFAC count.
+- Dot size reflects shadow hub rank (larger = higher residual).
+- Arcs appear when clicking a country, colored by trade value tier: gold=top 10%, light blue=top 25%,
+  dark blue=remaining. Edge slider controls what percentage of flows are shown (default 25%).
+
+=== END PROJECT REFERENCE ===
 
 Question:
 {state.get('refined_question') or state['question']}
@@ -658,14 +742,14 @@ Question:
 Extracted plan:
 {json.dumps(plan, ensure_ascii=True)}
 
-Evidence context (from Neo4j graph database):
+Graph evidence (from Neo4j database):
 {state['context_text']}
 
 Rules:
-- When graph evidence is relevant, cite it inline like [C1] or [V2].
-- When answering general/meta questions (e.g. "what is this tool?", "what is GraphRAG?"), answer
-  helpfully from general knowledge — do not say you lack evidence.
-- Keep answers concise and analytical.
+- For data questions (countries, rankings, trade flows), use graph evidence and cite inline [C1]/[V2].
+- For questions about the tool, methodology, math, or tech stack, use the PROJECT REFERENCE above.
+- You can combine both — e.g. explain what a shadow hub is (reference) then show the top ones (evidence).
+- Keep answers concise and helpful. Do not say you lack evidence for conceptual questions.
 - A high shadow residual suggests anomalous intermediary structure, not proof of illicit activity.
 """
             answer = self.answer_llm.invoke(prompt).content
