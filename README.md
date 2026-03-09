@@ -4,6 +4,8 @@
 
 A multi-layer analysis of illicit oil trade networks combining OFAC sanctions data, UN Comtrade bilateral flows (2019–2024), graph-theoretic "shadow hub" detection, and an AI-powered Graph RAG system for natural-language querying. Built as a final project for *Social Media & Network Analytics — Spring 2026*.
 
+> **[Launch the live app →](https://shadow-hubs.onrender.com)** — Interactive 3D globe with AI chat, clustering analysis, and real-time edge filtering.
+
 > **Shadow hubs** are countries whose betweenness centrality in the oil trade network is anomalously high relative to their trade volume — structurally positioned as intermediaries in ways that merit further investigation for potential sanctions circumvention.
 
 ---
@@ -14,6 +16,18 @@ A multi-layer analysis of illicit oil trade networks combining OFAC sanctions da
 |------|-------------|
 | **[Interactive Globe + AI Chat →](https://shadow-hubs.onrender.com)** | Full experience: 3D globe with GraphRAG chat panel. Ask questions about shadow hubs, sanctions, and trade patterns. |
 | **[Globe Only (GitHub Pages) →](https://ahmerrill.github.io/shadow-hubs/viz/globe_viz.html)** | Lightweight 3D globe visualization — no AI chat, runs entirely client-side. |
+
+---
+
+## ✨ Features
+
+- **3D Globe Visualization** — Globe.gl-rendered earth with 230 economies as interactive dots, colored by OFAC sanctions exposure, sized by shadow hub rank
+- **GraphRAG AI Chat** — Ask natural-language questions about shadow hubs, sanctions, and trade patterns; powered by LangGraph + GPT-4o-mini + Neo4j
+- **Edge Percentage Slider** — Dynamically filter trade arcs from 5% to 100% (by value) when viewing a country's flows; default shows top 25%
+- **Clustering Analysis** — Interactive Chart.js bubble chart classifying shadow hubs as Exclusive Brokers, Mixed, or Laundering Syndicates using weighted clustering coefficients
+- **Clustered / Raw Leaderboard** — Toggle between clustering-filtered and raw shadow hub rankings
+- **Collapsible About Panel** — Accordion-style sections explaining methodology, data sources, and how to fork the project
+- **UptimeRobot Keep-Alive** — Prevents Render free-tier cold starts with 5-minute HEAD pings
 
 ---
 
@@ -46,7 +60,13 @@ shadow-hubs/
 │   │   ├── __init__.py
 │   │   └── graphrag_langgraph.py           (enhanced GraphRAG with 9 intents)
 │   └── static/
-│       └── index.html                      (globe + chat panel, served by FastAPI)
+│       ├── index.html                      (3D globe, chat panel, leaderboard, edge slider)
+│       ├── clustering.html                 (interactive clustering bubble chart per year)
+│       └── data/
+│           ├── countries.json              (230 economies with lat/lon/OFAC)
+│           ├── shadow_hubs.json            (413 shadow hub scores)
+│           ├── edges.json                  (45K trade flows for arc rendering)
+│           └── clustering_data.json        (weighted clustering coefficients)
 ├── GraphRAG/                               (original GraphRAG prototype by Stiles)
 │   ├── RAG_driver.ipynb
 │   └── graphrag_helpers/
@@ -110,7 +130,7 @@ User Question → Plan (classify intent) → Retrieve (Cypher + Vector) → Draf
 
 4. **Shadow Hub Detection** — Regressed log-betweenness on log-volume; countries with high positive residuals are structurally positioned as intermediaries beyond what their trade volume would predict.
 
-5. **Clustering Analysis** — Computed weighted clustering coefficients for all countries to classify hub behavior: low clustering = exclusive broker (e.g., Singapore); high clustering = laundering syndicate (e.g., Georgia).
+5. **Clustering Analysis** — Computed weighted clustering coefficients (`nx.clustering(G, weight='log_weight')`) for all countries across all years. Low clustering (< 0.20) = exclusive broker acting as a lone bridge between disconnected groups (e.g., Singapore 0.18); high clustering (> 0.40) = laundering syndicate with dense internal trade among partners (e.g., Georgia 0.45, Uzbekistan 0.42).
 
 ### Graph Database
 
