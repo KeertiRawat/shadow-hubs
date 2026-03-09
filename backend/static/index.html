@@ -121,7 +121,7 @@
         }
 
         .legend {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 20px;
             background: rgba(20, 28, 50, 0.95);
@@ -764,27 +764,6 @@
         </div>
     </div>
 
-    <div class="legend" id="legendPanel">
-        <h3>LEGEND</h3>
-        <div id="legendItems">
-        <div class="legend-item">
-            <div class="legend-color" style="background:#ff6b6b;"></div>
-            <span>High OFAC (>500)</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background:#ff9f43;"></div>
-            <span>Medium OFAC (100-500)</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background:#42a5f5;"></div>
-            <span>Low/No OFAC</span>
-        </div>
-        <div class="legend-item">
-            <span>Dot size = Shadow hub rank</span>
-        </div>
-        </div>
-    </div>
-
     <div class="leaderboard">
         <h3>TOP SHADOW HUBS (<span id="lbYear">2024</span>)</h3>
         <div class="lb-mode-toggle">
@@ -805,6 +784,12 @@
         </table>
     </div>
     </div><!-- end left-panel -->
+
+    <div class="legend" id="legendPanel">
+        <h3>LEGEND</h3>
+        <div id="legendItems">
+        </div>
+    </div>
 
     <!-- Clear Arcs button - bottom left near legend -->
     <button class="bottom-btn" id="clearArcsBtn" style="display:none; position:fixed; bottom:30px; left:330px; border-color:rgba(255,107,107,0.5); color:#ff6b6b; z-index:200;" title="Clear trade arcs">Clear Arcs</button>
@@ -1221,6 +1206,7 @@
                 });
 
                 // Initial visualization
+                updateLegend(leaderboardMode);
                 updateVisualization(currentYear);
 
             } catch (err) {
