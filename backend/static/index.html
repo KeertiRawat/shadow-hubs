@@ -30,11 +30,12 @@
             left: 20px;
             z-index: 100;
             min-width: 300px;
+            max-width: 320px;
             max-height: calc(100vh - 40px);
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .left-panel::-webkit-scrollbar { width: 4px; }
@@ -121,15 +122,11 @@
         }
 
         .legend {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
             background: rgba(20, 28, 50, 0.95);
             border: 1px solid rgba(100, 150, 255, 0.3);
             border-radius: 8px;
-            padding: 20px;
-            z-index: 100;
-            max-width: 300px;
+            padding: 16px;
+            min-width: 300px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
         }
@@ -783,15 +780,14 @@
             </tbody>
         </table>
     </div>
-    </div><!-- end left-panel -->
-
     <div class="legend" id="legendPanel">
         <h3>LEGEND</h3>
         <div id="legendItems">
         </div>
     </div>
+    </div><!-- end left-panel -->
 
-    <!-- Clear Arcs button - bottom left near legend -->
+    <!-- Clear Arcs button - bottom left -->
     <button class="bottom-btn" id="clearArcsBtn" style="display:none; position:fixed; bottom:30px; left:330px; border-color:rgba(255,107,107,0.5); color:#ff6b6b; z-index:200;" title="Clear trade arcs">Clear Arcs</button>
 
     <!-- Bottom Buttons - right side -->
