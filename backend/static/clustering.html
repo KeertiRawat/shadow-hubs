@@ -155,6 +155,8 @@
             <option value="2023">2023</option>
             <option value="2024" selected>2024</option>
         </select>
+        <label for="ofacSlider" style="margin-left:20px;">Min OFAC Entities: <span id="ofacThreshLabel">5</span></label>
+        <input type="range" id="ofacSlider" min="0" max="100" step="1" value="5" style="width:200px; cursor:pointer; accent-color:#64b5f6;">
     </div>
     <div class="main-content">
         <div class="chart-area">
@@ -186,7 +188,7 @@
                         <li><strong>High CC:</strong> Partners form a dense clique — oil circulates within a tight, possibly coordinated ring (laundering syndicate).</li>
                     </ul>
 
-                    <p style="margin-bottom:0;"><strong style="color:#c0d0e8;">Filter:</strong> Only countries with OFAC entities &gt; 5 and positive shadow residual appear in the ranked table, ensuring focus on sanctioned-exposure intermediaries.</p>
+                    <p style="margin-bottom:0;"><strong style="color:#c0d0e8;">Filter:</strong> Only countries with OFAC entities &gt; <span id="filterThreshText">5</span> and positive shadow residual appear in the ranked table, ensuring focus on sanctioned-exposure intermediaries.</p>
                 </div>
             </div>
 
@@ -220,6 +222,26 @@
             document.getElementById('yearSelect').addEventListener('change', e => {
                 updateChart(parseInt(e.target.value));
             });
+
+            // Sync OFAC slider from localStorage
+            const savedOfac = localStorage.getItem('ofacThreshold');
+            if (savedOfac !== null) {
+                document.getElementById('ofacSlider').value = savedOfac;
+                document.getElementById('ofacThreshLabel').textContent = savedOfac;
+            }
+
+            document.getElementById('ofacSlider').addEventListener('input', (e) => {
+                document.getElementById('ofacThreshLabel').textContent = e.target.value;
+                document.getElementById('filterThreshText').textContent = e.target.value;
+                localStorage.setItem('ofacThreshold', e.target.value);
+                const year = parseInt(document.getElementById('yearSelect').value);
+                updateChart(year);
+            });
+
+            // Also sync the filter description text on load
+            const filterText = document.getElementById('filterThreshText');
+            if (filterText && savedOfac !== null) filterText.textContent = savedOfac;
+
             updateChart(2024);
         }
 
@@ -232,8 +254,9 @@
         function updateChart(year) {
             document.getElementById('tableYear').textContent = year;
             const yearData = allData.filter(d => d.year === year);
+            const ofacThreshold = parseInt(document.getElementById('ofacSlider').value);
             const top10 = yearData
-                .filter(d => d.shadow_resid > 0 && d.ofac_entities > 5)
+                .filter(d => d.shadow_resid > 0 && d.ofac_entities > ofacThreshold)
                 .sort((a, b) => b.shadow_resid - a.shadow_resid)
                 .slice(0, 10);
 

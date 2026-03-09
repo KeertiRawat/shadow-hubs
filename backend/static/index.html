@@ -1272,8 +1272,16 @@
                     }
                 });
 
+                // Sync OFAC slider from localStorage
+                const savedOfac = localStorage.getItem('ofacThreshold');
+                if (savedOfac !== null) {
+                    document.getElementById('ofacSlider').value = savedOfac;
+                    document.getElementById('ofacThreshLabel').textContent = savedOfac;
+                }
+
                 document.getElementById('ofacSlider').addEventListener('input', (e) => {
                     document.getElementById('ofacThreshLabel').textContent = e.target.value;
+                    localStorage.setItem('ofacThreshold', e.target.value);
                     updateVisualization(currentYear);
                     updateLegend(leaderboardMode);
                 });
