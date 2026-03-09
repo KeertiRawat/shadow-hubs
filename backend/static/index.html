@@ -792,6 +792,7 @@
 
     <!-- Bottom Buttons -->
     <div class="bottom-buttons">
+        <button class="bottom-btn" id="clearArcsBtn" style="display:none; border-color:rgba(255,107,107,0.5); color:#ff6b6b;" title="Clear trade arcs">Clear Arcs</button>
         <a href="/static/clustering.html" class="bottom-btn" style="text-decoration:none;" title="View clustering analysis">Clustering</a>
         <button class="bottom-btn" id="chatToggleBtn" title="Ask AI about shadow hubs">Ask AI</button>
     </div>
@@ -1136,6 +1137,15 @@
                 document.getElementById('yearSelect').addEventListener('change', (e) => {
                     currentYear = parseInt(e.target.value);
                     updateVisualization(currentYear);
+                    document.getElementById('clearArcsBtn').style.display = 'none';
+                });
+
+                // Clear arcs button
+                document.getElementById('clearArcsBtn').addEventListener('click', () => {
+                    globe.arcsData([]);
+                    selectedCountry = null;
+                    document.getElementById('clearArcsBtn').style.display = 'none';
+                    document.getElementById('topFlow').textContent = 'Click a country';
                 });
 
                 // Point click handler
@@ -1166,6 +1176,7 @@
                         });
 
                     globe.arcsData(arcsArray);
+                    document.getElementById('clearArcsBtn').style.display = arcsArray.length > 0 ? 'flex' : 'none';
 
                     // Update stats
                     document.getElementById('flowCount').textContent = countryFlows.length;
