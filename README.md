@@ -3,6 +3,7 @@
 **Network Analytics & Sanctions Overlay · GraphRAG-Powered Intelligence**
 
 A multi-layer analysis of illicit oil trade networks combining OFAC sanctions data, UN Comtrade bilateral flows (2019–2024), graph-theoretic "shadow hub" detection, and an AI-powered Graph RAG system for natural-language querying. Built as a final project for *Social Media & Network Analytics — Spring 2026*.
+![Globe](interactiveglobe.png)
 
 > **[Launch the live app →](https://shadow-hubs.onrender.com)** — Interactive 3D globe with AI chat, clustering analysis, and real-time edge filtering.
 
